@@ -1,0 +1,616 @@
+---
+title: "PI Summit Figures"
+author: "Brandon D. Gallas"
+date: "5/5/2021"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+# I set cache = TRUE to save figures as separate files.
+# However, if cache = TRUE there is another (primary) consequence.
+# If a code chunk has not changed, it will not be run (ave time).
+# This means you may not see changes earlier in the file (dangerous/confusing).
+# https://bookdown.org/yihui/rmarkdown-cookbook/cache.html
+# knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
+
+# This command does what I want. It creates an html or pdf of the whole
+# document while also creating the figures 
+# https://stackoverflow.com/questions/27992239/
+#    knitr-include-figures-in-report-and-output-figures-to-separate-files
+knitr::opts_chunk$set(fig.path = 'figures/', dev = c('png', 'pdf'))
+
+# This knitr command is useful for debugging.
+# It stops compiling early to produce the output.
+# knitr::knit_exit()
+
+```
+
+This file produces the figures presented at Pathology
+Informatics, 6 May 2021. There are minor differences compared to the actual
+presentation as annotations and pathologist information were being collected
+continuously.
+
+Furthermore, in the "Scatter plot" sections, the grouping of scores into bins
+based on the mean sTIL density has changed. For the Pathology Informatics talk,
+it was determined from all the readers using the caMicroscope platform.
+Now, the bins are determined in two ways: from all the data and from the panel.
+
+```{r init Data And Libs}
+
+# Specify the filter date.
+filterDate <- "2021-05-05 00:00:00 EST"
+
+# Filter the data by date
+mrmcDF.pilot <- HTT::pilotHTT
+mrmcDF.pilot <- mrmcDF.pilot[mrmcDF.pilot$createDate < filterDate, ]
+
+# Filter data by modality
+mrmcDF.camic <- mrmcDF.pilot[mrmcDF.pilot$modalityID == "camic", ]
+mrmcDF.pathp <- mrmcDF.pilot[mrmcDF.pilot$modalityID == "pathp", ]
+mrmcDF.eedap <- mrmcDF.pilot[mrmcDF.pilot$modalityID == "eedap", ]
+
+# Refactor readerID
+mrmcDF.camic$readerID <- factor(as.character(mrmcDF.camic$readerID))
+mrmcDF.pathp$readerID <- factor(as.character(mrmcDF.pathp$readerID))
+mrmcDF.eedap$readerID <- factor(as.character(mrmcDF.eedap$readerID))
+
+```
+
+```{r meanVarByCase.R}
+
+# Focus on caMicroscope data
+modalityID <- "camic"
+mrmcDF <- mrmcDF.pilot[mrmcDF.pilot$modalityID == modalityID, ]
+
+# Split the data by caseID
+mrmcByCase <- split(mrmcDF, mrmcDF$caseID)
+
+# Calculate the stats by case
+statsByCase <- lapply(mrmcByCase, HTT::doStatsByCase)
+statsByCaseDF <- do.call(rbind, statsByCase)
+
+# Filter out missing data (data without enough observations for calculating the mean or variance)
+index <- !is.na(statsByCaseDF$scoreVar)
+statsByCaseDF <- statsByCaseDF[index, ]
+
+# Sort the data by the mean
+index <- order(statsByCaseDF$scoreMean)
+statsByCaseDF <- statsByCaseDF[index, ]
+
+# Identify bins of equal size
+index.bin <- (1:10) * length(statsByCaseDF$scoreMean)/10
+scoreMean.bin <- statsByCaseDF$scoreMean[index.bin]
+
+# Estimate mean values within the bins
+scoreVar.bin <- mean(statsByCaseDF$scoreVar[0:index.bin[1]])
+CV.bin <- mean(statsByCaseDF$CV[0:index[1]])
+for (i in 2:10) {
+  scoreVar.bin <- c(scoreVar.bin, mean(statsByCaseDF$scoreVar[index.bin[i - 1]:index.bin[i]]))
+  CV.bin <- c(CV.bin, mean(statsByCaseDF$CV[index.bin[i - 1]:index.bin[i]]))
+}
+
+casesLE10 <- statsByCaseDF[statsByCaseDF$scoreMean <= 10, "caseID"]
+casesGT10LE40 <- statsByCaseDF[statsByCaseDF$scoreMean > 10 &
+                                 statsByCaseDF$scoreMean <= 40 , "caseID"]
+casesGT40 <- statsByCaseDF[statsByCaseDF$scoreMean > 40, "caseID"]
+
+```
+
+```{r function.convertMRMCtoDesignByBatch}
+
+convertMRMCtoDesignByBatch <- function(mrmcDF.cur) {
+
+  mrmcDF.cur.ReaderBatches <- split(mrmcDF.cur, list(mrmcDF.cur$readerID, mrmcDF.cur$batch))
+  mrmcDF.cur.ReaderBatch.1 <- mrmcDF.cur.ReaderBatches[[1]]
+
+  checkCompleteReaderBatch <- function(mrmcDF.cur.ReaderBatch.1) {
+
+    mrmcDF.cur.ReaderBatch.1$caseID <- factor(mrmcDF.cur.ReaderBatch.1$caseID)
+    if (nlevels(mrmcDF.cur.ReaderBatch.1$caseID) == 80) batchComplete <- 1
+    if (nlevels(mrmcDF.cur.ReaderBatch.1$caseID) < 80) batchComplete <- 0
+    if (nlevels(mrmcDF.cur.ReaderBatch.1$caseID) > 80) {
+      print("Unexpected result.")
+      browser()
+    }
+    return(batchComplete)
+  }
+
+  designOut <- unlist(lapply(mrmcDF.cur.ReaderBatches, checkCompleteReaderBatch))
+
+  dim(designOut) <- c(nlevels(mrmcDF.cur$readerID), nlevels(mrmcDF.cur$batch))
+
+  designOut <- t(designOut)
+
+}
+
+```
+
+```{r function.showDesignHTT}
+
+showDesignHTT <- function(mrmcDF.cur) {
+  
+  # Save the default values of the figure margins
+  mai.default <- c(1.02, 0.82, 0.82, 0.42)
+  mai.cur <- mai.default
+  # Increase the value of left margin of the figure
+  mai.cur[2] <- 1.5
+  par("mai" = mai.cur)
+
+  designOUT <- iMRMC::convertDFtoDesignMatrix(mrmcDF.cur, dropFlag = FALSE)
+
+  x <- 1:nlevels(mrmcDF.cur$caseID)
+  y <- 1:nlevels(mrmcDF.cur$readerID)
+  image(x, y, designOUT,
+        main = paste("Reader progress,", mrmcDF.cur[1, "modalityID"]),
+        xlab = "ROIs/Images/Batches", ylab = "",
+        yaxt = "n"
+  )
+  
+  axis(side = 2, at = y, labels = FALSE)
+  text(par("usr")[1], y, labels = levels(mrmcDF.cur$readerID), pos = 2, xpd = TRUE)
+  
+  # Add lines separating batches
+  lines(c(80.5,80.5), c(0,100))
+  lines(c(160.5,160.5), c(0,100))
+  lines(c(240.5,240.5), c(0,100))
+  lines(c(320.5,320.5), c(0,100))
+  lines(c(400.5,400.5), c(0,100))
+  lines(c(480.5,480.5), c(0,100))
+  lines(c(560.5,560.5), c(0,100))
+  lines(c(640.5,640.5), c(0,100))
+
+  # Add lines separating readers  
+  for (i in 1:ncol(designOUT)) {
+    lines(c(0, 640.5), c(i, i) + 0.5)
+  }
+  
+  par("mai" = mai.default)
+  
+  designByBatchDF.cur <- convertMRMCtoDesignByBatch(mrmcDF.cur)
+  
+  print(paste("Total number of observations", nrow(mrmcDF.cur)))
+  print(paste("Total number of readers", nlevels(mrmcDF.cur$readerID)))
+  print(paste("Total number of completed batches", sum(designByBatchDF.cur)))
+  result <- rowSums(designByBatchDF.cur)
+  names(result) <- paste("batch00", 1:8, sep = "")
+  print(result)
+
+}
+
+```
+
+# Data collected total
+
+```{r totals}
+
+desc.total.obs <- nrow(mrmcDF.pilot)
+desc.total.readers <- nlevels(mrmcDF.camic$readerID) +
+  nlevels(mrmcDF.pathp$readerID) + nlevels(mrmcDF.eedap$readerID)
+
+```
+
+**Data collection progress**
+
+* Date: `r filterDate`
+ 
+* Across all platforms
+  * Total number of observations `r desc.total.obs`
+  * Total number of readers = `r desc.total.readers`
+
+\pagebreak
+
+# Data collected caMicroscope
+
+```{r}
+
+showDesignHTT(mrmcDF.camic)
+
+```
+
+\pagebreak
+
+# Data collected PathPresenter
+
+```{r}
+
+showDesignHTT(mrmcDF.pathp)
+
+```
+
+\pagebreak
+
+# Data collected eeDAP
+
+```{r}
+
+showDesignHTT(mrmcDF.eedap)
+
+```
+
+# Coefficient of Variation
+
+```{r meanVarByCase.showCVByMean-Best}
+
+mean.min <- 0
+mean.max <- 100
+CV.min <- 0
+CV.max <- max(statsByCaseDF$CV)
+
+main <- paste(modalityID, ": CV for each ROI ", 
+              "(nROI=", nrow(statsByCaseDF), ")", sep = "")
+
+plot(
+  statsByCaseDF$scoreMean, statsByCaseDF$CV,
+  main = main,
+  xlab = "Mean sTIL density",
+  ylab = "CV sTIL density",
+  xlim = c(mean.min, mean.max),
+  ylim = c(CV.min, CV.max),
+  col = rgb(0, 0, 0, 0.2)
+)
+
+# Plot the average for each 10% bin of the data
+lines(c(0,scoreMean.bin[1]), c(1, 1) * CV.bin[1], lwd = 5)
+for (i in 2:length(scoreMean.bin)) {
+  lines(c(scoreMean.bin[i - 1],scoreMean.bin[i]), c(1, 1) * CV.bin[i], lwd = 5)
+}
+
+# Partition the plot into clinically defined regions
+lines(c(10, 10), c(0, 1.5), lwd = 3, lty = 2)
+lines(c(40, 40), c(0, 1.5), lwd = 3, lty = 2)
+
+text(2.5, 2, paste("nROI", length(casesLE10), sep = "\n"))
+text(25, 2, paste("nROI", length(casesGT10LE40), sep = "\n"))
+text(70, 2, paste("nROI", length(casesGT40), sep = "\n"))
+
+```
+
+# Mean-Variance Relationship
+
+```{r meanVarByCase.showVarByMean-Best}
+
+mean.min <- 0
+mean.max <- 100
+var.min <- 0
+var.max <- max(statsByCaseDF$scoreVar)
+
+main <- paste(modalityID, ": Variance for each ROI ", 
+              "(nROI=", length(statsByCaseDF$CV), ")", sep = "")
+
+plot(
+  statsByCaseDF$scoreMean, statsByCaseDF$scoreVar,
+  main = main,
+  xlab = "Mean sTIL density",
+  ylab = "Var sTIL density",
+  xlim = c(mean.min, mean.max),
+  ylim = c(var.min, 1100),
+  col = rgb(0, 0, 0, 0.25)
+)
+
+# Plot the average for each 10% bin of the data
+lines(c(0,scoreMean.bin[1]), c(1, 1) * scoreVar.bin[1], lwd = 5)
+for (i in 2:length(scoreMean.bin)) {
+  lines(c(scoreMean.bin[i - 1],scoreMean.bin[i]), c(1, 1) * scoreVar.bin[i], lwd = 5)
+}
+
+# Partition the plot into clinically defined regions
+lines(c(10, 10), c(0, 100000), lwd = 3, lty = 2)
+lines(c(40, 40), c(0, 100000), lwd = 3, lty = 2)
+
+text(2.5, 1000, paste("nROI", length(casesLE10), sep = "\n"))
+text(25, 1000, paste("nROI", length(casesGT10LE40), sep = "\n"))
+text(70, 1000, paste("nROI", length(casesGT40), sep = "\n"))
+
+```
+
+```{r agreeDensityBRBM-perR.config4}
+
+# In this file we look at the reader-averaged MSD for each reader
+# MSD = mean-squared deviation
+
+# Specify the configuration for this analysis
+
+modalityLabel0 <- factor(c(
+  "1: camic",
+  "2: eedap",
+  "3: pathp",
+  "4: all",
+  "5: all panel"
+))
+
+subgroupLabel0 <- factor(c(
+  "1: all considered",
+  "2: avg. less than or equal to 10",
+  "3: avg. greater than 10 and less than or equal to 40",
+  "4: avg. greater than 40",
+  "5: score.X equal to zero"
+))
+
+config0 <- expand.grid(modalityLabel = modalityLabel0, subgroupLabel = subgroupLabel0)
+
+# Run the between-reader analysis for config0[4,]
+# modalityLabel = "4: all"
+# subgroupLabel = "1: all considered"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[4],
+  config0$subgroupLabel[4]
+)
+
+```
+
+```{r unpack-resultsByConfig}
+
+# Unpack the key data
+modalityLabel <- resultsByConfig.curr$modalityLabel
+subgroupLabel <- resultsByConfig.curr$subgroupLabel
+modalityID <- resultsByConfig.curr$modalityID
+nR <- resultsByConfig.curr$nR
+readers <- resultsByConfig.curr$readers
+xlim.filter <- resultsByConfig.curr$xlim.filter
+
+mrmcDF <- resultsByConfig.curr$mrmcDF
+mrmcBRWM <- resultsByConfig.curr$mrmcBRWM
+mrmcByRRWM <- resultsByConfig.curr$mrmcByRRWM
+resultsBRWM <- resultsByConfig.curr$resultsBRWM
+resultsByRRWM <- resultsByConfig.curr$resultsByRRWM
+
+```
+
+\pagebreak
+
+# Mean-Squared Deviation Per Reader
+## All readers, all modalities, All data
+
+```{r resultsPerReader}
+
+# Organize MSD results as a matrix
+MSD.RR <- resultsBRWM$MSD
+dim(MSD.RR) <- c(nR, nR)
+rownames(MSD.RR) <- resultsBRWM$readerID.1[1:nR]
+colnames(MSD.RR) <- resultsBRWM$readerID.1[1:nR]
+
+# For every reader.X, average over reader.Y 
+MSDperR <- rowMeans(MSD.RR, na.rm = TRUE)
+
+# Start building the data frame
+resultsPerReader <- data.frame(readerID = names(MSDperR), MSD = MSDperR)
+
+# Organize nObs results as a matrix
+nObs <- resultsBRWM$nObs
+dim(nObs) <- c(nR, nR)
+rownames(nObs) <- resultsBRWM$readerID.1[1:nR]
+colnames(nObs) <- resultsBRWM$readerID.1[1:nR]
+
+# For every reader.X, sum over the observations
+rSum.nObs <- rowSums(nObs, na.rm = TRUE)
+resultsPerReader$nObs <- rSum.nObs
+
+# Rescale nObs (1, max) to be between 1 and 5
+rsum.nObs.scaled <- HTT::lineFromTwoPoints(rSum.nObs, 1, 1, max(rSum.nObs), 5)
+resultsPerReader$nObs.scaled <- rsum.nObs.scaled
+
+# Specify the symbol for each profession type
+resultsPerReader$pch <- 0
+index <- grep("resident", resultsPerReader$readerID)
+resultsPerReader[index, "pch"] <- 1
+index <- grep("unknown", resultsPerReader$readerID)
+resultsPerReader[index, "pch"] <- 2
+
+# Some readers had no paired observations with other readers
+# This leads to NaN from rowMeans function. Exclude this data.
+resultsPerReader <- resultsPerReader[resultsPerReader$nObs >= 1, ]
+
+```
+
+
+```{r agreeDensityBRBM-perR.showMSDperReader}
+
+# Prepare for a plot of the reader-average
+main <- paste("modality", modalityLabel, "... subgroup", subgroupLabel)
+sub <- paste("Largest symbol ==", max(resultsPerReader$nObs), "observations")
+xlab <- "reader.X"
+ylab <- "The reader-average of MSD given reader.X"
+
+plot(NULL,
+     xlim = c(0, nR), ylim = c(0, 850),
+     main = main, sub = sub, xlab = xlab, ylab = ylab)
+
+index <- order(resultsPerReader$MSD)
+resultsPerReader <- resultsPerReader[index, ]
+rownames(resultsPerReader) <- 1:nrow(resultsPerReader)
+
+lines(c(0,nR), c(0,0))
+for (i in 1:nR) points(
+  i,
+  resultsPerReader$MSD[i],
+  pch = resultsPerReader$pch[i],
+  cex = resultsPerReader$nObs.scaled[i]
+)
+
+legend(0, 850, legend = c("Pathologists", "Residents", "Unknown"), pch = 0:2)
+
+print(resultsPerReader)
+
+```
+
+\pagebreak
+
+# Mean-Squared Deviation Per Reader
+## PANEL, all modalities, All data
+
+```{r agreeDensityBRBM-perR.panel}
+
+# Run the between-reader analysis for config0[5,]
+# modalityLabel = "5: all panel"
+# subgroupLabel = "1: all considered"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[5],
+  config0$subgroupLabel[5]
+)
+
+<<unpack-resultsByConfig>>
+<<resultsPerReader>>
+<<agreeDensityBRBM-perR.showMSDperReader>>
+
+```
+
+\pagebreak
+
+# Scatter plot: Average Score <= 10
+
+```{r agreeDensityBRBM-MRMC.config9}
+
+# Run the between-reader analysis for config0[9,]
+# modalityLabel = "4: all"
+# subgroupLabel = "1: all considered"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[9],
+  config0$subgroupLabel[9]
+)
+
+<<unpack-resultsByConfig>>
+
+```
+
+```{r agreeDensity-MRMC.scatterplot}
+
+# Take the log of the data after adding a small amount to each score
+mrmcBRWM$score.X <- log10(mrmcBRWM$score.X + 1)
+mrmcBRWM$score.Y <- log10(mrmcBRWM$score.Y + 1)
+
+mean.min <- 0.5
+mean.max <- log10(100)
+
+# Determine the frequency table for paired observations
+resultBlaAlt <- HTT::getBlandAltmanWithDuplicates(mrmcBRWM)
+
+# Rescale nObs (1, max) to be between 1 and 5
+resultBlaAlt$nObs.scaled <- HTT::lineFromTwoPoints(
+  resultBlaAlt$nObs, 1, .5, max(resultBlaAlt$nObs), 5
+)
+
+# For the scatter plots, make the plot region square
+default.par <- par(no.readonly = TRUE)
+par(pty = "s")
+
+# Between-reader Symmetrized scatter plot
+maxScore <- 10^max(c(mrmcBRWM$score.X, mrmcBRWM$score.Y))
+main <- paste("Modality", modalityLabel, "... Subgroup", subgroupLabel)
+sub <- paste("n = ", nrow(mrmcBRWM), ", Largest symbol ==", max(resultBlaAlt$nObs), "observations")
+plot(10^(resultBlaAlt$x), 10^(resultBlaAlt$y), log = "xy",
+     cex = resultBlaAlt$nObs.scaled, col = rgb(0, 0, 0, resultBlaAlt$nObs.scaled/5),
+     lwd = 3,
+     xlim = c(.5,100), ylim = c(.5,100),
+     main = main, sub = sub, xlab = "Score Reader X", ylab = "Score Reader Y")
+lines(c(.1,maxScore), c(.1, maxScore))
+
+# Return the plotting parameters to their defaults
+par(default.par)
+
+# Do the between-reader, between-modality analysis
+limitsOfagreement <- iMRMC::laBRBM(mrmcDF, modalitiesToCompare = c(modalityID, modalityID))
+print(limitsOfagreement)
+
+```
+
+\pagebreak
+
+```{r agreeDensityBRBM-MRMC.config10}
+
+# Run the between-reader analysis for config0[10,]
+# modalityLabel = "5: all panel"
+# subgroupLabel = "2: avg. less than or equal to 10"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[10],
+  config0$subgroupLabel[10]
+)
+
+<<unpack-resultsByConfig>>
+<<agreeDensity-MRMC.scatterplot>>
+
+```
+
+\pagebreak
+
+# Scatter plot: 10 < Average Score <= 40
+
+```{r agreeDensityBRBM-MRMC.config14}
+
+# Run the between-reader analysis for config0[14,]
+# modalityLabel = "4: all"
+# subgroupLabel = "3: avg. greater than 10 and less than or equal to 40"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[14],
+  config0$subgroupLabel[14]
+)
+
+<<unpack-resultsByConfig>>
+<<agreeDensity-MRMC.scatterplot>>
+
+```
+
+\pagebreak
+
+```{r agreeDensityBRBM-MRMC.config15}
+
+# Run the between-reader analysis for config0[15,]
+# modalityLabel = "5: all panel"
+# subgroupLabel = "3: avg. greater than 10 and less than or equal to 40"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[15],
+  config0$subgroupLabel[15]
+)
+
+<<unpack-resultsByConfig>>
+<<agreeDensity-MRMC.scatterplot>>
+  
+```
+
+
+\pagebreak
+
+# Scatter plot: Average Score > 40
+
+```{r agreeDensityBRBM-MRMC.config19}
+
+# Run the between-reader analysis for config0[19,]
+# modalityLabel = "4: all"
+# subgroupLabel = "4: avg. greater than 40"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[19],
+  config0$subgroupLabel[19]
+)
+
+<<unpack-resultsByConfig>>
+<<agreeDensity-MRMC.scatterplot>>
+
+```
+
+\pagebreak
+
+```{r agreeDensityBRBM-MRMC.config20}
+
+# Run the between-reader analysis for config0[20,]
+# modalityLabel = "5: all panel"
+# subgroupLabel = "4: avg. greater than 40"
+resultsByConfig.curr <- HTT::agreeDensityBRBM(
+  mrmcDF.pilot,
+  config0$modalityLabel[20],
+  config0$subgroupLabel[20]
+)
+
+<<unpack-resultsByConfig>>
+<<agreeDensity-MRMC.scatterplot>>
+  
+```
