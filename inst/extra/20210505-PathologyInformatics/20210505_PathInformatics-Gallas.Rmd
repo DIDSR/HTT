@@ -454,6 +454,9 @@ resultsByConfig.curr <- HTT::agreeDensityBRBM(
   config0$subgroupLabel[5]
 )
 
+# This code only works when the document is knit.
+# It doesn't work when the code is run like a script.
+# Essentially the code chunks named are run.
 <<unpack-resultsByConfig>>
 <<resultsPerReader>>
 <<agreeDensityBRBM-perR.showMSDperReader>>
@@ -475,6 +478,9 @@ resultsByConfig.curr <- HTT::agreeDensityBRBM(
   config0$subgroupLabel[9]
 )
 
+# This code only works when the document is knit.
+# It doesn't work when the code is run like a script.
+# Essentially the code chunks named are run.
 <<unpack-resultsByConfig>>
 
 ```
@@ -533,6 +539,9 @@ resultsByConfig.curr <- HTT::agreeDensityBRBM(
   config0$subgroupLabel[10]
 )
 
+# This code only works when the document is knit.
+# It doesn't work when the code is run like a script.
+# Essentially the code chunks named are run.
 <<unpack-resultsByConfig>>
 <<agreeDensity-MRMC.scatterplot>>
 
@@ -553,6 +562,9 @@ resultsByConfig.curr <- HTT::agreeDensityBRBM(
   config0$subgroupLabel[14]
 )
 
+# This code only works when the document is knit.
+# It doesn't work when the code is run like a script.
+# Essentially the code chunks named are run.
 <<unpack-resultsByConfig>>
 <<agreeDensity-MRMC.scatterplot>>
 
@@ -571,6 +583,9 @@ resultsByConfig.curr <- HTT::agreeDensityBRBM(
   config0$subgroupLabel[15]
 )
 
+# This code only works when the document is knit.
+# It doesn't work when the code is run like a script.
+# Essentially the code chunks named are run.
 <<unpack-resultsByConfig>>
 <<agreeDensity-MRMC.scatterplot>>
   
@@ -592,6 +607,9 @@ resultsByConfig.curr <- HTT::agreeDensityBRBM(
   config0$subgroupLabel[19]
 )
 
+# This code only works when the document is knit.
+# It doesn't work when the code is run like a script.
+# Essentially the code chunks named are run.
 <<unpack-resultsByConfig>>
 <<agreeDensity-MRMC.scatterplot>>
 
@@ -610,6 +628,9 @@ resultsByConfig.curr <- HTT::agreeDensityBRBM(
   config0$subgroupLabel[20]
 )
 
+# This code only works when the document is knit.
+# It doesn't work when the code is run like a script.
+# Essentially the code chunks named are run.
 <<unpack-resultsByConfig>>
 <<agreeDensity-MRMC.scatterplot>>
   
