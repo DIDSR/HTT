@@ -19,9 +19,9 @@
 #'     \item \code{score} (num) - Percent of area occupied by lymphocytes in
 #'      \code{Intra-Tumoral Stroma}. (Same as \code{densityTILs}).
 #'     \item \code{experience} (num) - Number of years of experience for
-#'      pathologists
+#'      pathologists. If experience == 100, experience is unknown
 #'     \item \code{experienceResident} (num) - Number of years in residency
-#'      for non-pathologists
+#'      for non-pathologists. If experienceResident == 100, experience is unknown
 #'     \item \code{labelROI} (factor) - Label of region of interest
 #'      (Intra-Tumoral Stroma, Invasive Margin, Tumor with No Intervening
 #'       Stroma, other regions)
