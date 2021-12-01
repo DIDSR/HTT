@@ -20,5 +20,5 @@ analyses done for different presentations and publications.
 can be found in this folder: [https://github.com/DIDSR/HTT/tree/main/inst/extra/20210505-PathologyInformatics](https://github.com/DIDSR/HTT/tree/main/inst/extra/20210505-PathologyInformatics)
 
 
-[![Github All Releases](https://img.shields.io/github/downloads/DIDSR/HTT/total)]()
+[comment]: <> "[![Github All Releases](https://img.shields.io/github/downloads/DIDSR/HTT/total)]()"
 
