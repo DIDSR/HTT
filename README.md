@@ -5,6 +5,8 @@ Truthing project (HTT project). The "inst" directory
 will be used to archive scripts that reproduce the
 analyses done for different presentations and publications.
 
+To install this package from the R command line: install_github('DIDSR/HTT')
+
 #### Data and Code Repository
 * [https://github.com/DIDSR/HTT](https://github.com/DIDSR/HTT)
 
