@@ -16,6 +16,8 @@ To install this package from the R command line: install_github('DIDSR/HTT')
 #### Manuscript describing the project:
 * S. N. Dudgeon et al., “A Pathologist-Annotated Dataset for Validating Artificial Intelligence: A Project Description and Pilot Study,” arXiv:2010.06995, 2020. Accepted for publication by the Journal of Pathology Informatics, 2021. [https://arxiv.org/abs/2010.06995](https://arxiv.org/abs/2010.06995)
 
+#### Webinar tour of the data: [Video here](https://ncihub.org/groups/eedapstudies/wiki/Presentation2021:TourofHTTData)
+
 #### Version 1.0: Pathology Informatics Presentation:
 Version 1.0 of this repository holds the data, scripts, and functions that were used for the following presentation.
 * B. D. Gallas and et al., “High Throughput Truthing (HTT): pathologist agreement from a pilot study,” presented at the Pathology Informatics Summit, 2021.  [https://ncihub.org/groups/eedapstudies/wiki/Presentation2021:PathologyInformaticsSummitHTTproject](https://ncihub.org/groups/eedapstudies/wiki/Presentation2021:PathologyInformaticsSummitHTTproject)
