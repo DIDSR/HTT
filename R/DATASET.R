@@ -6,16 +6,32 @@
 #' @return
 #'   A data frame with the following (18) variables:
 #'   \itemize{
-#'     \item \code{batch} (factor) - Batch number of image annotated by the
-#'      reader (8 batches in total)
+#'     \item{\code{batch} (factor) - Batch number of image annotated by the
+#'      reader (10 batches in total)
+#'     \itemize{
+#'           \item \code{FDA-HTT-batch00x} - Pilot Study annotations
+#'           \item \code{FDA-HTT-Train00x} - Expert Panel annotations
+#'           }}
 #'     \item \code{WSI} (factor) - Whole case file name of whole slide image
 #'      annotated by reader
 #'     \item \code{caseID} (factor) - ID for region of interest. Includes WSI,
 #'      x position of ROI, y position of ROI, and length of ROI
-#'     \item \code{readerID} (factor) - ID for each participant (profession
+#'     \item{\code{readerID} (factor) - ID for each participant (profession
 #'      with ID number)
-#'     \item \code{modalityID} (factor) - Platform used by viewer (caMicro,
-#'      pathPresenter, or eeDAP)
+#'     \itemize{
+#'           \item There are four possible professions at the front end of 
+#'           readerID: pathologist, expert, resident, or unknown.
+#'           \item \code{pathologist} - board-certified pathologist
+#'           \item \code{expert} - member of the Expert Panel
+#'           \item \code{resident} - in residency
+#'           \item \code{unknown} - no indicated profession
+#'           }}
+#'     \item{\code{modalityID} (factor) - Platform used by viewer (caMicro,
+#'      pathPresenter, eeDAP, or camic-expert)
+#'      \itemize{
+#'           \item \code{camic-expert} - Expert Panel annotations collected
+#'            using the caMicroscope platform
+#'           }}
 #'     \item \code{score} (num) - Percent of area occupied by lymphocytes in
 #'      \code{Intra-Tumoral Stroma}. (Same as \code{densityTILs}).
 #'     \item \code{experience} (num) - Number of years of experience for
@@ -27,8 +43,8 @@
 #'       Stroma, other regions)
 #'     \item \code{VTA} (logical) - Indicates whether the region of interest
 #'      is appropriate for sTIL evaluation
-#'     \item \code{percentStroma} (num) - Percentage of stroma in region of
-#'      interest
+#'     \item \code{percentStroma} (num) - Percentage of tumor-associated stroma
+#'      in region of interest
 #'     \item \code{densityTILs} (num) - Percent of area occupied by lymphocytes
 #'      in \code{Intra-Tumoral Stroma}. (Same as \code{score})
 #'     \item \code{createDate} (POSIXct) - Date and time annotation was created
@@ -51,9 +67,10 @@
 #'
 #' @details
 #'   This data was collected from the CAmicroscope, PathPresenter, and eeDAP
-#'   platforms.
+#'   platforms. Please refer to https://github.com/DIDSR/HTT/blob/main/README.md 
+#'   for more information about the data.
 #'
-#'   As of 1 August 2021, this data contains 7292 observations of 18 variables.
+#'   As of 6 May 2022, this data contains 7898 observations of 18 variables.
 #'
 #    This data is saved as rda and csv files.
 #'

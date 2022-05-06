@@ -33,10 +33,22 @@
 #'  \item \code{labelMajority} (chr) - The majority label of ROI
 #'  \item \code{labelEntropy} (num) - The entropy of the observed label distribution
 #' }
-
+#' 
 #' @export
 #'
-# @examples
+#' @examples
+#' # Get Data
+#' df1 <- HTT::pilotHTT
+#' 
+#' # Select data from a single caseID (ROI) and a single modalityID
+#' df2 <- df1[df1$caseID == df1$caseID[2] & df1$modalityID == df1$modalityID[1], ]
+#' 
+#' # Run the function
+#' result <- HTT::doStatsByCase(df2)
+#' 
+#' # View the result
+#' print(result)
+#' 
 doStatsByCase <- function(mrmcByCase.cur) {
 
   # Grab the key covariates

@@ -1,7 +1,7 @@
 Package: HTT
 Type: Package
 Title: Data, scripts, and functions of the High-Throughput Truthing project
-Version: 1.0
+Version: 2.0.0
 Author: Brandon D. Gallas
 Maintainer: <brandon.gallas@fda.hhs.gov>
 Description: This package contains data collected for the High-Throughput
@@ -13,4 +13,4 @@ Depends: R (>= 2.10)
 License: CC0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
