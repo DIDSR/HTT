@@ -1,0 +1,1167 @@
+---
+title: "Cancers Special Issue TILs Figures and Tables"
+author: "Victor Garcia, MD"
+date: "May 6, 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE, comment=NA}
+knitr::opts_chunk$set(echo = FALSE, comment=NA)
+
+
+```
+
+This file produces the figures included in the manuscript titled “Protocol 
+Development for Pathologists to Provide Machine Learning Validation Data of 
+TILs in Breast Cancer” published in the Cancers Special Issue "Tumor 
+Infiltrating Lymphocytes (TIL) in Solid Tumors: Emerging Insights."
+
+This file uses the current `pilotHTT` data frame but can also be edited to
+load a copy of the `pilotHTT` data frame in this folder: 
+`inst/extra/20220506-GarciaCancersPaper` to simplify reproducibility of the paper
+in case some data formatting changes to the current `pilotHTT` data frame.
+
+
+```{r function.create_statsByCaseDF}
+
+# Modified version of code used in "HTT::statsByCaseDF". I adapted it 
+# to a function for repeated use.
+create_statsByCaseDF <- function(mrmcDF, keep_na=FALSE){
+  
+  # The modification keeps cases with no calculated variance to 
+  # be included in the output. One important use-case occurs when comparing 
+  # the entropy of the ROI Label of the expert panel to that of the crowd 
+  # pathologists.
+  
+  mrmcDF$batch <- factor(as.character(mrmcDF$batch))
+  mrmcDF$WSI <- factor(as.character(mrmcDF$WSI))
+  mrmcDF$caseID <- factor(as.character(mrmcDF$caseID))
+  mrmcDF$readerID <- factor(as.character(mrmcDF$readerID))
+  mrmcDF$modalityID <- factor(as.character(mrmcDF$modalityID))
+  
+  # Split the data by caseID
+  mrmcByCase <- split(mrmcDF, mrmcDF$caseID)
+  
+  # Calculate the stats by case
+  statsByCase <- lapply(mrmcByCase, HTT::doStatsByCase)
+  statsByCaseDF <- do.call(rbind, statsByCase)
+  
+  if (keep_na == FALSE){
+  # When keep_na = False, the function removes cases where there is no
+  # calculated variance. Set keep_na = False when analyzing variance. 
+  # This is the same as the original HTT::statsByCaseDF.
+    
+  # If keep_na = TRUE, we keep those annotations with no variance. This is used
+  # for calculation of Entropy.
+    
+    index <- !is.na(statsByCaseDF$scoreVar)
+    statsByCaseDF <- statsByCaseDF[index, ]
+  }
+    
+  # Added as a double check for proper levels in the new data frame.
+  statsByCaseDF$batch <- factor(as.character(statsByCaseDF$batch))
+  statsByCaseDF$WSI <- factor(as.character(statsByCaseDF$WSI))
+  statsByCaseDF$caseID <- factor(as.character(statsByCaseDF$caseID))
+  statsByCaseDF$modalityID <- factor(as.character(statsByCaseDF$modalityID))
+  statsByCaseDF$labelMajority <- factor(as.character(statsByCaseDF$labelMajority))
+  
+  return(statsByCaseDF)
+}
+
+```
+
+
+```{r init Data and Libs}
+
+# If one tries to replicate the selection of cases for the expert panel sessions
+# using without the use of the modalityID or batchID, they will not be able to 
+# return the same cases. The initial selection query was completed in 
+# August 2021 and 571 cases were returned as having a calculated scoreVar.
+# Subsequent improved data cleaning has removed duplicate data entries so that 
+# each reader can only have 1 score per ROI. 
+# After this new data cleaning processing, one note change was
+# caseID 'HTT-TILS-011-11B.NDPI_X126468.2190_Y37339.2190' went from having a 
+# calculated scoreVar to a score Var that is "NA". This was due to removing a 
+# duplicate entry by reader "unknown1892".
+
+# Specify the filter date.
+filterDate <- "2021-05-05 00:00:00 EST"
+
+# Load all pilot study data and filter the data by date.
+mrmcDF_temp <- HTT::pilotHTT
+mrmcDF_filtered <- mrmcDF_temp[mrmcDF_temp$createDate < filterDate, ]
+
+# All pilot study data collected by the crowd pathologists using the "camic" 
+# (caMicroscope) modality.
+mrmcDF_camicro <- mrmcDF_filtered[mrmcDF_filtered$modalityID == "camic", ]
+
+
+# Data from our expert panel. ReaderID "pathologist2899" annotations removed 
+# because they were incomplete.
+mrmcDF_Experts <- mrmcDF_temp[mrmcDF_temp$modalityID == "camic-expert", ]
+mrmcDF_Experts <- mrmcDF_Experts[mrmcDF_Experts$readerID != "expert2899", ]
+
+
+# Pilot study data scored by Crowd Pathologists limited to the ROIs 
+# evaluated by the expert panel.
+mrmcDF_Crowd <- mrmcDF_camicro[mrmcDF_camicro$caseID %in% mrmcDF_Experts$caseID,]
+mrmcDF_Crowd$readerID <- factor(as.character(mrmcDF_Crowd$readerID))
+mrmcDF_Crowd$caseID <- factor(as.character(mrmcDF_Crowd$caseID))
+
+
+```
+
+
+```{r statsByCaseDF}
+
+statsByCaseDF_camicro <- create_statsByCaseDF(mrmcDF_camicro) 
+statsByCaseDF_Experts <- create_statsByCaseDF(mrmcDF_Experts) 
+statsByCaseDF_Crowd <- create_statsByCaseDF(mrmcDF_Crowd) 
+
+statsByCaseDF_camicro.E <- create_statsByCaseDF(mrmcDF_camicro, keep_na=TRUE)
+statsByCaseDF_Experts.E <- create_statsByCaseDF(mrmcDF_Experts,  keep_na=TRUE) 
+statsByCaseDF_Crowd.E <- create_statsByCaseDF(mrmcDF_Crowd, keep_na=TRUE) 
+
+```
+
+
+``` {r casesByDensityBin}
+# Create lists of caseIDs for each clinical bin sorted by scoreMean.
+
+# Clinical bins for the "Select ROIs" using the scoreMean from the Crowd annotations
+casesLE10 <- statsByCaseDF_Crowd[
+  statsByCaseDF_Crowd$scoreMean <= 10, "caseID"]
+
+casesGT10LE40 <- statsByCaseDF_Crowd[
+  statsByCaseDF_Crowd$scoreMean > 10 &
+    statsByCaseDF_Crowd$scoreMean <= 40 , "caseID"]
+
+casesGT40 <- statsByCaseDF_Crowd[
+  statsByCaseDF_Crowd$scoreMean > 40, "caseID"]
+
+
+# Clinical bins for "All ROIs" scored using the caMicroscope modality
+casesLE10_camicro <- statsByCaseDF_camicro[
+  statsByCaseDF_camicro$scoreMean <= 10, "caseID"]
+
+casesGT10LE40_camicro <- statsByCaseDF_camicro[
+  statsByCaseDF_camicro$scoreMean > 10 &
+    statsByCaseDF_camicro$scoreMean <= 40 , "caseID"]
+
+casesGT40_camicro <- statsByCaseDF_camicro[
+  statsByCaseDF_camicro$scoreMean > 40, "caseID"]
+
+
+```
+
+
+# Collected data totals
+
+In the manuscript, we report the dataset size at the time of its preparation 
+    with 29 pathologists and 7,373 annotations. This count excludes the Expert
+    Panel annotations.
+
+```{r counts.PilotStudy}
+
+# Calculate the number of contributing pathologists to the entire
+# Pilot Study. Expert panel annotations have been excluded.
+
+
+mrmcDF_pilotStudycounts <- mrmcDF_temp[mrmcDF_temp$modalityID != "camic-expert", ]
+mrmcDF_pilotStudycounts$readerID <- factor(mrmcDF_pilotStudycounts$readerID)
+
+cat("Number of pathologists who participated in the Pilot Study as of today's 
+    date:",         
+    nlevels(mrmcDF_pilotStudycounts$readerID))
+
+cat('\n\n')
+
+
+# Calculate the number of annotations collected.
+
+cat("Number of annotations collected from the Pilot Study as of today's 
+    date:",   
+    nrow(mrmcDF_pilotStudycounts))
+
+
+```
+
+
+\newpage
+
+``` {r Figure 1 Variance of Pilot Study Results - All and Select ROIs}
+
+# Figure 1. Plot of the sTIL Variance vs. Mean density for the Pilot Study data 
+# at the time of data acquisition.
+
+
+mean.min <- 0
+mean.max <- 100
+Var.min <- 0
+Var.max <- 2750 # Set to have consistent figure size with subsequent plots.
+
+main <- paste("Variance of Pilot Study Results: All and Select ROIs")
+
+
+plot(
+  statsByCaseDF_camicro$scoreMean, statsByCaseDF_camicro$scoreVar,
+  main = main,
+  xlab = "Mean sTILs density %",
+  ylab = "Variance sTILs density",
+  xlim = c(mean.min, mean.max),
+  ylim = c(Var.min, Var.max),
+  col = rgb(0,0,0, 0.5)
+ )
+
+# Partition the plot into clinically defined regions
+lines(c(10, 10), c(25, 2250), lwd = 2, lty = 2)
+lines(c(40, 40), c(25, 2250), lwd = 2, lty = 2)
+
+# Mark the Select ROIs on the graph with a blue triangle
+points(statsByCaseDF_Crowd$scoreMean, statsByCaseDF_Crowd$scoreVar, 
+       col=rgb(0,0.5,0.75), pch=17)
+
+# Print the number of cases within each clinical bin
+text(3.75, 2500, paste("nAll:", length(casesLE10_camicro), sep = " "), cex=0.8)
+text(3.75, 2300, paste("nSelect:", length(casesLE10), sep = " "), cex=0.8)
+text(25, 2500, paste("nAll:", length(casesGT10LE40_camicro), sep = " "), cex=0.8)
+text(25, 2300, paste("nSelect:", length(casesGT10LE40), sep = " "), cex=0.8)
+text(60, 2500, paste("nAll:", length(casesGT40_camicro), sep = " "), cex=0.8)
+text(60, 2300, paste("nSelect:", length(casesGT40), sep = " "), cex=0.8)
+
+
+legend(x=76, y=2650, c('All ROIs', 'Select ROIs', 'Count of ROIs'),
+       cex=0.8, col=c(rgb(0,0,0,0.5), rgb(0,0.5,0.75), rgb(0,0,0)), pch=c(21,17,110))
+
+#dev.off()
+
+```
+
+\newpage
+
+
+```{r High-Low Variance Cases and Statistics from Figure 2}
+
+# Identifies the cases with the highest and lowest variance from 2 dataframes
+do_highlowStats.Variance <- function(cases.DF1, cases.DF2){
+
+  # Select the cases with the max and min scoreVar from the first dataframe
+  highlowStats.DF1 <- rbind(
+    cases.DF1[cases.DF1$scoreVar == max(cases.DF1$scoreVar), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')], 
+    cases.DF1[cases.DF1$scoreVar == min(cases.DF1$scoreVar), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')])
+  
+  # If there are multiple cases with the same max or min scoreVar, only keep one
+  # of each scoreVar
+  highlowStats.DF1 <- highlowStats.DF1[
+    !duplicated(highlowStats.DF1$scoreVar), ]
+  
+  # Round the values for scoreMean, scoreVar, and labelEntropy 
+  highlowStats.DF1$scoreMean <- format(
+    round(highlowStats.DF1$scoreMean, digits=2), nsmall = 2)
+  highlowStats.DF1$scoreVar <- format(
+    round(highlowStats.DF1$scoreVar, digits=2), nsmall = 2)
+  highlowStats.DF1$labelEntropy <- format(
+    round(highlowStats.DF1$labelEntropy, digits=2), nsmall = 2)
+  
+  
+  # Select the cases with the max and min scoreVar from the second dataframe
+  highlowStats.DF2 <- rbind(
+    cases.DF2[cases.DF2$scoreVar == max(cases.DF2$scoreVar), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')],
+    cases.DF2[cases.DF2$scoreVar == min(cases.DF2$scoreVar), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')])
+  
+  # If there are multiple cases with the same max or min scoreVar, only keep one
+  # of each scoreVar
+  highlowStats.DF2 <- highlowStats.DF2[
+    !duplicated(highlowStats.DF2$scoreVar), ]
+  
+  # Round the values for scoreMean, scoreVar, and labelEntropy 
+  highlowStats.DF2$scoreMean <- format(
+    round(highlowStats.DF2$scoreMean, digits=2), nsmall = 2)
+  highlowStats.DF2$scoreVar <- format(
+    round(highlowStats.DF2$scoreVar, digits=2), nsmall = 2)
+  highlowStats.DF2$labelEntropy <- format(
+    round(highlowStats.DF2$labelEntropy, digits=2), nsmall = 2)
+  
+  
+  # Concatenate the 2 dataframes together
+  highlowStats <- rbind(
+    highlowStats.DF1,
+    highlowStats.DF2)
+  
+  
+  colnames(highlowStats) <- c("Mean sTILs Density",
+                              "Variance",
+                              "Majority Label",
+                              "Entropy",
+                              "caseID")
+  
+  rownames(highlowStats) <- c("High Variance LE10",
+                              "Low Variance LE10",
+                              "High Variance GT40",
+                              "Low Variance GT40")
+  
+  return(highlowStats)
+  
+  
+}
+
+refactor_columns <- function(df_temp){
+  # A function to refactor the columns of dataframe
+  
+  df_temp$batch <- factor(df_temp$batch)
+  df_temp$WSI <- factor(df_temp$WSI)
+  df_temp$caseID <- factor(df_temp$caseID)
+  df_temp$modalityID <- factor(df_temp$modalityID)
+  df_temp$labelMajority <- factor(df_temp$labelMajority)
+    
+  return(df_temp)
+}
+
+# Create dataframes for the clinical density bins from the Crowd annotations
+casesLE10.DF <- statsByCaseDF_Crowd[
+  statsByCaseDF_Crowd$caseID %in% casesLE10, ]
+casesLE10.DF <- refactor_columns(casesLE10.DF)
+
+
+casesGT10LE40.DF <- statsByCaseDF_Crowd[
+  statsByCaseDF_Crowd$caseID %in% casesGT10LE40, ]
+casesGT10LE40.DF <- refactor_columns(casesGT10LE40.DF)
+
+
+casesGT40.DF <- statsByCaseDF_Crowd[
+  statsByCaseDF_Crowd$caseID %in% casesGT40, ]
+casesGT40.DF <- refactor_columns(casesGT40.DF)
+
+
+# Identify the cases of Highest and Lowest Variance from the clinical density 
+# bins of casesLE10 and casesGT40. These cases are the images in Figure 2.
+varTable <- do_highlowStats.Variance(casesLE10.DF, casesGT40.DF)
+
+# List of the caseIDs for Figure 2.
+caseID_list.var <- as.character(varTable$caseID)
+
+
+```
+
+
+```{r High-Low Entropy Cases and Statistics from Figure 3}
+# Identifies the cases with the highest and lowest entropy from 2 dataframes
+do_highlowStats.Entropy <- function(cases.DF1, cases.DF2){
+  
+  # Select the cases with the max and min labelEntropy from the first dataframe
+  highlowStats.DF1 <- rbind(
+    cases.DF1[cases.DF1$labelEntropy == max(cases.DF1$labelEntropy), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')], 
+    cases.DF1[cases.DF1$labelEntropy == min(cases.DF1$labelEntropy), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')])
+  
+  # If there are multiple cases with the same max or min labelEntropy, only keep one
+  # of each labelEntropy
+  highlowStats.DF1 <- highlowStats.DF1[
+    !duplicated(highlowStats.DF1$labelEntropy), ]
+
+  # Round the values for scoreMean, scoreVar, and labelEntropy 
+  highlowStats.DF1$scoreMean <- format(
+    round(highlowStats.DF1$scoreMean, digits=2), nsmall = 2)
+  highlowStats.DF1$scoreVar <- format(
+    round(highlowStats.DF1$scoreVar, digits=2), nsmall = 2)
+  highlowStats.DF1$labelEntropy <- format(
+    round(highlowStats.DF1$labelEntropy, digits=2), nsmall = 2)  
+  
+  # Select the cases with the max and min labelEntropy from the second dataframe
+  highlowStats.DF2 <- rbind(
+    cases.DF2[cases.DF2$labelEntropy == max(cases.DF2$labelEntropy), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')],
+    cases.DF2[cases.DF2$labelEntropy == min(cases.DF2$labelEntropy), 
+              c('scoreMean', 'scoreVar', 'labelMajority','labelEntropy', 'caseID')])
+  
+  # If there are multiple cases with the same max or min labelEntropy, only keep one
+  # of each labelEntropy
+  highlowStats.DF2 <- highlowStats.DF2[
+    !duplicated(highlowStats.DF2$labelEntropy), ]
+  
+  # Round the values for scoreMean, scoreVar, and labelEntropy
+  highlowStats.DF2$scoreMean <- format(
+    round(highlowStats.DF2$scoreMean, digits=2), nsmall = 2)
+  highlowStats.DF2$scoreVar <- format(
+    round(highlowStats.DF2$scoreVar, digits=2), nsmall = 2)
+  highlowStats.DF2$labelEntropy <- format(
+    round(highlowStats.DF2$labelEntropy, digits=2), nsmall = 2)
+  
+  
+  # Combine the two dataframes together
+  highlowStats <- rbind(
+    highlowStats.DF1, 
+    highlowStats.DF2)
+  
+  colnames(highlowStats) <- c("Mean sTILs Density",
+                              "Variance",
+                              "Majority Label",
+                              "Entropy",
+                              'caseID')
+  
+  rownames(highlowStats) <- c("High Entropy LE10",
+                              "Low Entropy LE10",
+                              "High Entropy GT40",
+                              "Low Entropy GT40")
+  
+  return(highlowStats)
+}
+
+
+
+# Identify the cases of Highest and Lowest Entropy from the clinical density 
+# bins of casesLE10 and casesGT40. These cases are the images in Figure 3.
+entropyTable <- do_highlowStats.Entropy(casesLE10.DF, casesGT40.DF)
+
+# List of the caseIDs for Figure 3.
+caseID_list.entropy <-as.character(entropyTable$caseID)
+
+
+
+```
+
+\newpage
+
+```{r Table 1 Summary statistics of collected annotations from crowd pathologists for the example ROIs}
+
+
+
+# Table 1. Summary statistics of collected annotations from crowd 
+# pathologists for the example ROIs in Figure 2 (rows 1-4) and 
+# Figure 3 (rows 5-8). For the High Entropy LE10 (Fig. 3A) case, 
+# there is a tie for the Majority Label; the multiple labels are
+# separated by *AND*.
+
+
+
+comboTable <- rbind(varTable, entropyTable)
+
+comboTable$Figure <- c("2A", "2B", "2C", "2D",
+                       "3A", "3B", "3C", "3D")
+
+comboTable <- cbind(rownames(comboTable),
+                    data.frame(comboTable, row.names=NULL))
+
+names(comboTable)[names(comboTable) == 'rownames(comboTable)'] <- 'Figure Description'
+names(comboTable)[names(comboTable) == 'Mean.sTILs.Density'] <- 'Mean sTILs Density'
+names(comboTable)[names(comboTable) == 'Majority.Label'] <- 'Majority Label'
+
+
+knitr::kable(comboTable[c("Figure",
+                          "Figure Description",
+                          "Mean sTILs Density",
+                          "Variance",
+                          "Majority Label",
+                          "Entropy")], caption="Summary Statistics of example ROIs", align="c")
+
+
+#write.csv(comboTable,
+#          FILEPATH,
+#          row.names = TRUE)
+```
+
+
+
+```{r Frequency of ROI labels from Figure 2}
+
+# Create Table of Frequency of ROI labels of the cases selected for Figure 2 -- 
+# those sorted by variance
+
+# Create dataframe of the caseIDs and labelROIs for the cases in caseID_list.var
+labelROIdf.var <- mrmcDF_Crowd[mrmcDF_Crowd$caseID %in% caseID_list.var, c('caseID','labelROI')]
+
+# Refactor the columns
+labelROIdf.var$caseID <- factor(labelROIdf.var$caseID)
+labelROIdf.var$labelROI <- factor(labelROIdf.var$labelROI)
+
+# Create summary dataframe of the labelROI counts
+labelROIdf.var <- as.data.frame.matrix(table(labelROIdf.var))
+
+# Label 'caseID' column
+labelROIdf.var <- cbind(rownames(labelROIdf.var), data.frame(labelROIdf.var, row.names=NULL))
+names(labelROIdf.var)[names(labelROIdf.var) == 'rownames(labelROIdf.var)'] <- 'caseID'
+
+# Table created from varTable with the means by which each caseID was selected
+varTable.sortname <- cbind(rownames(varTable), data.frame(varTable, row.names=NULL))
+varTable.sortname <- varTable.sortname[c('caseID', 'rownames(varTable)')]
+varTable.sortname$caseID <- factor(varTable.sortname$caseID)
+names(varTable.sortname)[names(varTable.sortname) == 'rownames(varTable)'] <- 'highlowsort'
+varTable.sortname$highlowsort <- factor(varTable.sortname$highlowsort)
+
+# Merge labelROIdf.var with varTable.sortname
+labelROI.var.merged <- merge(varTable.sortname, labelROIdf.var, by='caseID')
+
+# Reorder the rows
+labelROI.var.merged <- labelROI.var.merged[match(
+  c("High Variance LE10", "Low Variance LE10", "High Variance GT40", "Low Variance GT40"),
+  labelROI.var.merged$highlowsort), ]
+
+# Rename the rows
+rownames(labelROI.var.merged) <- labelROI.var.merged$highlowsort
+
+# Select all columns except caseID
+labelROI.var.merged <- labelROI.var.merged[c("Invasive.Margin", 'Intra.Tumoral.Stroma',
+                                             'Tumor.with.No.Intervening.Stroma', 'Other.Regions')]
+
+# Rename columns to remove periods
+names(labelROI.var.merged)[names(labelROI.var.merged) == 'Invasive.Margin'] <- 'Invasive Margin'
+names(labelROI.var.merged)[names(labelROI.var.merged) == 'Intra.Tumoral.Stroma'] <- 'Intra-Tumoral Stroma'
+names(labelROI.var.merged)[names(labelROI.var.merged) == 'Tumor.with.No.Intervening.Stroma'] <- 'Tumor with No Intervening Stroma'
+names(labelROI.var.merged)[names(labelROI.var.merged) == 'Other.Regions'] <- 'Other Regions'
+
+#write.csv(labelROI.var.merged,
+#          FILEPATH, 
+#          row.names = TRUE)
+
+# View the table
+# knitr::kable(labelROI.var.merged, caption="Frequency of ROI Labels of High and Low Variance Cases", align="c")
+
+
+```
+
+
+
+```{r Frequency of ROI labels from Figure 3}
+
+# Create Table of Frequency of ROI labels of the cases selected for Figure 3 -- 
+# those sorted by entropy
+
+# Create dataframe of the caseIDs and labelROIs for the cases in caseID_list.entropy
+labelROIdf.E <- mrmcDF_Crowd[mrmcDF_Crowd$caseID %in% caseID_list.entropy, c('caseID','labelROI')]
+
+# Refactor the columns
+labelROIdf.E$caseID <- factor(labelROIdf.E$caseID)
+labelROIdf.E$labelROI <- factor(labelROIdf.E$labelROI)
+
+# Create summary dataframe of the labelROI counts
+labelROIdf.E <- as.data.frame.matrix(table(labelROIdf.E))
+
+# Label 'caseID' column
+labelROIdf.E <- cbind(rownames(labelROIdf.E), data.frame(labelROIdf.E, row.names=NULL))
+names(labelROIdf.E)[names(labelROIdf.E) == 'rownames(labelROIdf.E)'] <- 'caseID'
+
+# Table created from entropyTable with the means by which each caseID was selected
+entropyTable.sortname <- cbind(rownames(entropyTable), data.frame(entropyTable, row.names=NULL))
+entropyTable.sortname <- entropyTable.sortname[c('caseID', 'rownames(entropyTable)')]
+entropyTable.sortname$caseID <- factor(entropyTable.sortname$caseID)
+names(entropyTable.sortname)[names(entropyTable.sortname) == 'rownames(entropyTable)'] <- 'highlowsort'
+entropyTable.sortname$highlowsort <- factor(entropyTable.sortname$highlowsort)
+
+# Merge labelROIdf.E with entropyTable.sortname
+labelROI.E.merged <- merge(entropyTable.sortname, labelROIdf.E, by='caseID')
+
+# Reorder the rows
+labelROI.E.merged <- labelROI.E.merged[match(
+  c("High Entropy LE10", "Low Entropy LE10", "High Entropy GT40", "Low Entropy GT40"),
+  labelROI.E.merged$highlowsort), ]  
+
+# Rename the rows
+rownames(labelROI.E.merged) <- labelROI.E.merged$highlowsort
+
+# Select all columns except caseID
+labelROI.E.merged <- labelROI.E.merged[c("Invasive.Margin", 'Intra.Tumoral.Stroma',
+                                             'Tumor.with.No.Intervening.Stroma')]
+# Rename columns to remove periods
+names(labelROI.E.merged)[names(labelROI.E.merged) == 'Invasive.Margin'] <- 'Invasive Margin'
+names(labelROI.E.merged)[names(labelROI.E.merged) == 'Intra.Tumoral.Stroma'] <- 'Intra-Tumoral Stroma'
+names(labelROI.E.merged)[names(labelROI.E.merged) == 'Tumor.with.No.Intervening.Stroma'] <- 'Tumor with No Intervening Stroma'
+labelROI.E.merged$Other.Regions <- c(0,0,0,0)
+names(labelROI.E.merged)[names(labelROI.E.merged) == 'Other.Regions'] <- 'Other Regions'
+
+
+# write.csv(labelROI.E.merged,
+#           FILEPATH, 
+#           row.names = TRUE)
+
+# View the table
+# knitr::kable(labelROI.E.merged, caption="Frequency of ROI Labels of High and Low Entropy Cases", align="c")
+
+
+```
+
+
+\newpage
+
+``` {r Table 2 Frequency of ROI labels of collected annotations from crowd}
+
+
+# Table 2. Frequency of ROI labels of collected annotations from 
+# crowd pathologists for the example ROIs Figure 2 (rows 1-4) and
+# Figure 3 (rows 5-8).
+
+
+
+combo_ROIlabel_Table <- rbind(labelROI.var.merged, labelROI.E.merged)
+
+combo_ROIlabel_Table$Figure <- c("2A", "2B", "2C", "2D",
+                       "3A", "3B", "3C", "3D")
+
+combo_ROIlabel_Table <- cbind(rownames(combo_ROIlabel_Table),
+                    data.frame(combo_ROIlabel_Table, row.names=NULL))
+
+names(combo_ROIlabel_Table)[names(combo_ROIlabel_Table) == 'rownames(combo_ROIlabel_Table)'] <- 'Figure Description'
+names(combo_ROIlabel_Table)[names(combo_ROIlabel_Table) == 'Invasive.Margin'] <- 'Invasive Margin'
+names(combo_ROIlabel_Table)[names(combo_ROIlabel_Table) == 'Intra.Tumoral.Stroma'] <- 'Intra-Tumoral Stroma'
+names(combo_ROIlabel_Table)[names(combo_ROIlabel_Table) == 'Tumor.with.No.Intervening.Stroma'] <- 'Tumor with No Intervening Stroma'
+names(combo_ROIlabel_Table)[names(combo_ROIlabel_Table) == 'Other.Regions'] <- 'Other Regions'
+
+combo_ROIlabel_Table <- combo_ROIlabel_Table[c("Figure", "Figure Description", "Invasive Margin", 'Intra-Tumoral Stroma', 'Tumor with No Intervening Stroma', "Other Regions")]
+
+
+#combo_ROIlabel_Table
+knitr::kable(combo_ROIlabel_Table, caption="Frequency of ROI Labels", align="c")
+
+#write.csv(combo_ROIlabel_Table,
+#          FILEPATH,
+#          row.names = TRUE)
+
+```
+
+\newpage
+
+``` {r Figure 4 Variance of Select ROIs - Crowd and Experts}
+
+# Figure 4: Plot of the Variance vs. Mean sTIL density for the ROIs selected 
+# for the expert panel. ROIs are matched on their unique case identifiers and 
+# plotted with the mean sTIL score density as determined by the crowd 
+# pathologists. Variances belonging to the same ROI are connected by straight 
+# lines. Cases where there was no calculable variance from the Experts’ 
+# assessment are represented by an open circle (Crowd) without a connected 
+# blue triangle (Experts).
+
+
+
+# This function creates a look-up table to match cases on their caseID for 
+# comparison of the expert panel to the crowd pathologists.
+lookup_fn <- function(lookup, Entropy=FALSE){
+  # lookup is the column that is being mapped to the Experts. The "Entropy" 
+  # input is to distinguish if the function is being applied to the caseIDs 
+  # from statsByCaseDF_Experts.E (Entropy = TRUE) or statsByCaseDF_Experts 
+  # (Entropy = FALSE).
+  
+  if (Entropy == TRUE){
+    caseID_list <- levels(statsByCaseDF_Experts.E$caseID)
+  }
+  
+  else{
+     caseID_list <- levels(statsByCaseDF_Experts$caseID)
+  }
+  
+  # Create empty list
+  final_list <- vector(mode='list', length(caseID_list))
+  
+  # Generate list based on caseIDs
+  for (i in 1:length(caseID_list)){
+    final_list[[i]] <- lookup[caseID_list[i]]
+  }
+  
+  # Transform list to dataframe and transpose it
+  final_list <- as.data.frame(final_list)
+  final_list <- t(final_list)
+ 
+  final_list <- final_list[,c(1)]
+  
+  return(final_list)
+}
+
+
+# Create look-up tables for matching points on the Variance plot
+meanCrowd_lookup <- statsByCaseDF_Crowd$scoreMean
+names(meanCrowd_lookup) <- statsByCaseDF_Crowd$caseID
+meanCrowd <- lookup_fn(meanCrowd_lookup)
+
+varExperts_lookup <- statsByCaseDF_Experts$scoreVar
+names(varExperts_lookup) <- statsByCaseDF_Experts$caseID
+varExperts <- lookup_fn(varExperts_lookup)
+
+varCrowd_lookup <- statsByCaseDF_Crowd$scoreVar
+names(varCrowd_lookup) <- statsByCaseDF_Crowd$caseID
+varCrowd <- lookup_fn(varCrowd_lookup)
+
+
+# Generate the plot
+mean.min <- 0
+mean.max <- 100
+Var.min <- 0
+Var.max <- 2750
+
+main <- paste("Variance of Select ROIs: Crowd and Experts")
+
+plot(
+  statsByCaseDF_Crowd$scoreMean, statsByCaseDF_Crowd$scoreVar,
+  main = main,
+  xlab = "Mean sTILs density %",
+  ylab = "Variance sTILs density",
+  xlim = c(mean.min, mean.max),
+  ylim = c(Var.min, Var.max),
+  col = rgb(0,0,0, 0.5)
+ )
+
+
+
+# Add blue triangles to identify the Experts score
+points(meanCrowd, varExperts, col=rgb(0,0.5,0.75), pch=17)
+
+# Draw connecting lines between the Crowd and Expert annotations for the 
+# same caseID
+arrows(meanCrowd, varCrowd,
+       meanCrowd, varExperts, 
+       code=0,
+       col=1)
+
+
+legend(x=87, y=2790, c('Crowd', 'Experts'),
+       cex=0.8, col=c(rgb(0,0,0,0.5), rgb(0,0.5,0.75)), pch=c(21,17))
+
+#dev.off()
+
+```
+
+\newpage
+
+```{r Table 3 Variance Summary Statistics, results='asis'}
+
+# Table 3. Variance Summary Statistics of the annotations from all 
+# ROIs scored using the caMicro-scope modality (Crowd - All), the 
+# crowd annotations of select ROIs (Crowd – Select), and the expert 
+# panel’s annotations of the select ROIs. Data is grouped by the 
+# mean sTIL density bin and reported as the median variance and 
+# [IQR].
+
+
+
+# Function to generate summary statistics tables for Figures 4 and 5 binned by 
+# the scoreMean.
+do_summaryStats <- function(statsByCaseDF_temp, summaryCol, matched = FALSE){
+  # statsBYCaseDF_temp is the dataframe being summarized
+  # summaryCol is the column to summarize
+  
+  # When matched = FALSE, casesIDs are grouped using the input dataframe 
+  # scoreMean values.
+  if (matched == FALSE){
+    summaryStats <- rbind(
+      
+      # Summary for the all density bins
+      summary(statsByCaseDF_temp[, summaryCol]),
+      
+      # Summary of those where scoreMean <= 10
+      summary(statsByCaseDF_temp[
+        statsByCaseDF_temp$scoreMean <= 10, summaryCol]),
+      
+      # Summary of those where scoreMean >10 & <= 40
+      summary(statsByCaseDF_temp[
+        statsByCaseDF_temp$scoreMean > 10 & 
+          statsByCaseDF_temp$scoreMean <= 40 , summaryCol]),
+      
+      # Summary of those where scoreMean >40
+      summary(statsByCaseDF_temp[
+        statsByCaseDF_temp$scoreMean > 40, summaryCol]))
+  } else{
+      # When matched = TRUE, caseIDs are grouped using the Crowd scoreMean values
+      # previously binned as casesLE10, casesGT10LE40, and casesGT40.
+      summaryStats <- rbind(
+        
+        # Summary for the all density bins
+        summary(statsByCaseDF_temp[, summaryCol]),
+        
+        # Summary of those where scoreMean <= 10
+        summary(statsByCaseDF_temp[
+          (statsByCaseDF_temp$caseID %in% casesLE10), summaryCol]),
+        
+        # Summary of those where scoreMean >10 & <= 40
+        summary(statsByCaseDF_temp[
+          (statsByCaseDF_temp$caseID %in% casesGT10LE40), summaryCol]),
+        
+        # Summary of those where scoreMean >40
+        summary(statsByCaseDF_temp[
+          (statsByCaseDF_temp$caseID %in% casesGT40), summaryCol]))
+  }
+  
+  # Rename row to print with proper symbols
+  rownames(summaryStats) <- c("All Densities",
+                            # '\u2264 10%',
+                            '$\\leq$ 10%',
+                            # "10% < % \u2264 40%",
+                            '10% < % $\\leq$ 40%',
+                            "> 40%")
+  
+  # Return rounded values
+  return(format(round(summaryStats, digits=2), nsmall = 2))
+}
+
+
+
+# Create summary tables for Variance
+summaryStats_camicro.V <- do_summaryStats(statsByCaseDF_camicro, 'scoreVar')
+summaryStats_Experts.V <- do_summaryStats(statsByCaseDF_Experts, 'scoreVar', matched=TRUE)
+summaryStats_Crowd.V <- do_summaryStats(statsByCaseDF_Crowd, 'scoreVar', matched=TRUE)
+
+#Convert summary table to a dataframe, create IQR column, and transpose
+df_summaryStats_camicro.V <- as.data.frame(summaryStats_camicro.V)
+df_summaryStats_camicro.V$IQR <- paste0("[",df_summaryStats_camicro.V[,c(2)],"-",df_summaryStats_camicro.V[,c(5)],"]")
+df_summaryStats_camicro.V$PSEntire <- paste(df_summaryStats_camicro.V$Median, df_summaryStats_camicro.V$IQR)
+names(df_summaryStats_camicro.V)[names(df_summaryStats_camicro.V) == "PSEntire"] <- "Crowd - All"
+df_summaryStats_camicro.V <- t(df_summaryStats_camicro.V[c("Crowd - All")])
+
+
+#Convert summary table to a dataframe, create IQR column, and transpose
+df_summaryStats_Crowd.V <- as.data.frame(summaryStats_Crowd.V)
+df_summaryStats_Crowd.V$IQR <- paste0("[",df_summaryStats_Crowd.V[,c(2)],"-",df_summaryStats_Crowd.V[,c(5)],"]")
+df_summaryStats_Crowd.V$PSSelect <- paste(df_summaryStats_Crowd.V$Median, df_summaryStats_Crowd.V$IQR)
+names(df_summaryStats_Crowd.V)[names(df_summaryStats_Crowd.V) == "PSSelect"] <- "Crowd - Select"
+df_summaryStats_Crowd.V <- t(df_summaryStats_Crowd.V[c("Crowd - Select")])
+
+
+#Convert summary table to a dataframe, create IQR column, and transpose
+df_summaryStats_Experts.V <- as.data.frame(summaryStats_Experts.V)
+df_summaryStats_Experts.V$IQR <- paste0("[",df_summaryStats_Experts.V[,c(2)],"-",df_summaryStats_Experts.V[,c(5)],"]")
+df_summaryStats_Experts.V$EP <- paste(df_summaryStats_Experts.V$Median, df_summaryStats_Experts.V$IQR)
+names(df_summaryStats_Experts.V)[names(df_summaryStats_Experts.V) == "EP"] <- "Experts"
+df_summaryStats_Experts.V <- t(df_summaryStats_Experts.V[c("Experts")])
+
+
+# Combine the 3 summary dataframes
+combined_summaryStats.V <- rbind(df_summaryStats_camicro.V,
+                               df_summaryStats_Crowd.V,
+                               df_summaryStats_Experts.V)
+
+# write.csv(combined_summaryStats.V,
+#          FILEPATH, 
+#           row.names = TRUE)
+
+
+knitr::kable(combined_summaryStats.V, caption="Variance Summary Statistics Matched ROIs: Median [IQR]", align="c")
+
+```
+
+\newpage
+
+``` {r Figure 5 Entropy of Select Pilot Study ROIs matched on Crowd mean sTIL score}
+# I need to have all cases represented in this plot, including those without a
+# calculated Variance. I modified create_statsByCaseDF to not filter out cases
+# with no Variance.
+
+
+# Figure 5. Plot of the ROI label entropy vs. mean sTIL density for 
+# the ROIs selected for the expert panel. ROIs are matched on their 
+# case identifiers and plotted with their mean sTIL score density as
+# determined by the crowd pathologists. ROI label entropies belonging 
+# to the same ROI are connected by straight lines.
+
+
+mean.min <- 0
+mean.max <- 100
+labelEntropy.min <- 0
+labelEntropy.max <- max(statsByCaseDF_Crowd.E$labelEntropy, statsByCaseDF_Experts.E$labelEntropy)
+
+main <- paste("Entropy of Select ROIs: Crowd and Experts")
+
+# Create look-up tables for matching points on the Entropy plot
+meanCrowd_lookup <- statsByCaseDF_Crowd.E$scoreMean
+names(meanCrowd_lookup) <- statsByCaseDF_Crowd.E$caseID
+meanCrowd <- lookup_fn(meanCrowd_lookup, Entropy=TRUE)
+
+entropyExperts_lookup <- statsByCaseDF_Experts.E$labelEntropy
+names(entropyExperts_lookup) <- statsByCaseDF_Experts.E$caseID
+entropyExperts <- lookup_fn(entropyExperts_lookup, Entropy=TRUE)
+
+entropyCrowd_lookup <- statsByCaseDF_Crowd.E$labelEntropy
+names(entropyCrowd_lookup) <- statsByCaseDF_Crowd.E$caseID
+entropyCrowd <- lookup_fn(entropyCrowd_lookup, Entropy=TRUE)
+
+
+plot(
+  meanCrowd, entropyCrowd,
+  main = main,
+  xlab = "Mean sTILs density %",
+  ylab = "ROI Label Entropy",
+  xlim = c(mean.min, mean.max),
+  ylim = c(labelEntropy.min, labelEntropy.max),
+  col = rgb(0,0,0, 0.5)
+ )
+
+# Add blue triangles to identify the Experts score
+points(meanCrowd, entropyExperts, col=rgb(0,0.5,0.75), pch=17)
+
+# Draw connecting lines between the Crowd and Expert annotations for the 
+# same caseID
+arrows(meanCrowd, entropyCrowd,
+       meanCrowd, entropyExperts,
+       code=0,
+       col=1)
+
+legend(x=86, y=1.0875, c('Crowd', 'Experts'),
+       cex=0.8, col=c(rgb(0,0,0,0.5), rgb(0,0.5,0.75)), pch=c(21,17))
+
+
+```
+
+
+
+\newpage
+
+
+```{r Table 4 Entropy Comparison of Select Pilot Study ROIs matched on Crowd mean sTIL score excluded is.na(scoreVar) from All caMicro, results='asis'}
+
+
+# Table 4. Entropy Summary Statistics of the labels from all ROIs 
+# scored using the caMicroscope modality (Crowd - All), the crowd 
+# labels of select ROIs (Crowd – Select), and the expert panel’s 
+# ROI labels. Data is grouped by the mean sTIL density bin and 
+# reported as the median entropy and in-terquartile range [IQR].
+
+
+
+# Create summary table for labelEntropy
+summaryStats_Experts_Entropy <- do_summaryStats(statsByCaseDF_Experts.E, 'labelEntropy', matched=TRUE)
+summaryStats_Crowd_Entropy <- do_summaryStats(statsByCaseDF_Crowd.E, 'labelEntropy', matched=TRUE)
+
+
+# To create the summary table for all camicro cases, we must remove those cases
+# where scoreVar is na to model our selection criteria. This is done here.
+summaryStats_camicro_Entropy <- rbind(
+  # Summary for the all density bins
+  summary(statsByCaseDF_camicro.E$labelEntropy),
+  
+  # Summary of those where scoreMean <= 10
+  summary(statsByCaseDF_camicro.E[!is.na(statsByCaseDF_camicro.E['scoreVar']) 
+                                  & statsByCaseDF_camicro.E$scoreMean <= 10, 
+                                  "labelEntropy"]),
+  
+  # Summary of those where scoreMean >10 & <= 40
+  summary(statsByCaseDF_camicro.E[!is.na(statsByCaseDF_camicro.E['scoreVar']) 
+                             & statsByCaseDF_camicro.E$scoreMean > 10 
+                             & statsByCaseDF_camicro.E$scoreMean <= 40, 
+                             "labelEntropy"]),
+  
+  # Summary of those where scoreMean >40
+  summary(statsByCaseDF_camicro.E[!is.na(statsByCaseDF_camicro.E['scoreVar']) 
+                             & statsByCaseDF_camicro.E$scoreMean > 40, 
+                             "labelEntropy"]))
+
+# Rename row to print with proper symbols                      
+rownames(summaryStats_camicro_Entropy) <- c("All Densities",
+                                             '$\\leq$ 10%',
+                                             "10% < % $\\leq$ 40%",
+                                             "> 40%")
+# Return rounded values
+summaryStats_camicro_Entropy <- format(round(summaryStats_camicro_Entropy, 
+                                             digits=2), nsmall = 2)
+
+      
+      
+
+df_summaryStats_camicro_Entropy <- as.data.frame(summaryStats_camicro_Entropy)
+df_summaryStats_camicro_Entropy$IQR <- paste0("[",df_summaryStats_camicro_Entropy[,c(2)]," - ",
+                                       df_summaryStats_camicro_Entropy[,c(5)]," ]")
+df_summaryStats_camicro_Entropy$PSEntire <- paste(df_summaryStats_camicro_Entropy$Median, df_summaryStats_camicro_Entropy$IQR)
+names(df_summaryStats_camicro_Entropy)[names(df_summaryStats_camicro_Entropy) == "PSEntire"] <- "Crowd - All"
+df_summaryStats_camicro_Entropy <- t(df_summaryStats_camicro_Entropy[c("Crowd - All")])
+
+
+df_summaryStats_Crowd_Entropy <- as.data.frame(summaryStats_Crowd_Entropy)
+df_summaryStats_Crowd_Entropy$IQR <- paste0("[",df_summaryStats_Crowd_Entropy[,c(2)]," - ",df_summaryStats_Crowd_Entropy[,c(5)]," ]")
+df_summaryStats_Crowd_Entropy$PSSelect <- paste(df_summaryStats_Crowd_Entropy$Median, df_summaryStats_Crowd_Entropy$IQR)
+names(df_summaryStats_Crowd_Entropy)[names(df_summaryStats_Crowd_Entropy) == "PSSelect"] <- "Crowd - Select"
+df_summaryStats_Crowd_Entropy <- t(df_summaryStats_Crowd_Entropy[c("Crowd - Select")])
+
+
+
+df_summaryStats_Experts_Entropy <- as.data.frame(summaryStats_Experts_Entropy)
+df_summaryStats_Experts_Entropy$IQR <- paste0("[ ",df_summaryStats_Experts_Entropy[,c(2)]," - ",df_summaryStats_Experts_Entropy[,c(5)]," ]")
+df_summaryStats_Experts_Entropy$EP <- paste(df_summaryStats_Experts_Entropy$Median, df_summaryStats_Experts_Entropy$IQR)
+names(df_summaryStats_Experts_Entropy)[names(df_summaryStats_Experts_Entropy) == "EP"] <- "Experts"
+df_summaryStats_Experts_Entropy <- t(df_summaryStats_Experts_Entropy[c("Experts")])
+
+combined_summaryStats_Entropy <- rbind(df_summaryStats_camicro_Entropy,
+                               df_summaryStats_Crowd_Entropy,
+                               df_summaryStats_Experts_Entropy)
+
+# write.csv(combined_summaryStats_Entropy,
+#           FILEPATH, 
+#           row.names = TRUE)
+
+
+#rownames(combined_summaryStats_Entropy) <- c('All caMicroscope')
+
+knitr::kable(combined_summaryStats_Entropy, caption="Entropy Summary Statistics Matched ROIs: Median [IQR] - excluded is.na(scoreVar) from All caMicro", align="c")
+
+```
+
+\newpage
+
+
+```{r Table 5 Distribution of majority ROI labels, results='asis'}
+# Create a table where each row is a Majority Label and the columns are the 
+# counts of that Majority Label for the Pilot Study - Select and Expert Panel
+# data
+
+
+# Table 5. Frequency of Majority ROI Labels. Counts of the frequency 
+# of the calculated majority ROI labels. Counts are grouped as all 
+# ROIs scored using caMicroscope (Crowd – All), select ROIs annotated 
+# by the crowd pathologists (Crowd – Select), and the expert panel’s 
+# annotations (Experts).
+
+
+
+# Identify the number of rows for each dataframe
+denominator.Experts <- nrow(statsByCaseDF_Experts.E)
+denominator.camicro <- nrow(statsByCaseDF_camicro.E)
+denominator.Crowd <- nrow(statsByCaseDF_Crowd.E)
+
+
+
+# Create table of the counts for each labelMajority
+ROIlabel.table_Expert <- table(statsByCaseDF_Experts.E$labelMajority)
+
+# Make the table a dataframe
+ROIlabelDF_Expert <- as.data.frame(ROIlabel.table_Expert)
+
+# Create a column that is the percentage for each labelMajority using the 
+# number of rows for each dataframe
+ROIlabelDF_Expert$Percent <- ((ROIlabelDF_Expert['Freq'])/denominator.Experts * 100)
+ROIlabelDF_Expert$Percent <- as.numeric(unlist(ROIlabelDF_Expert$Percent))
+
+# Merge the Freq and Percent columns into one column
+ROIlabelDF_Expert$Freq <- paste0(
+  ROIlabelDF_Expert$Freq," (",round(ROIlabelDF_Expert$Percent,2) ,"%)")
+
+# Drop the temporary Percent column
+ROIlabelDF_Expert <- ROIlabelDF_Expert[c('Var1', 'Freq')]
+
+# Rename the columns
+names(ROIlabelDF_Expert)[names(ROIlabelDF_Expert) == 'Var1'] <- "Majority Label"
+names(ROIlabelDF_Expert)[names(ROIlabelDF_Expert) == 'Freq'] <- "Experts"
+
+
+
+# Create table of the counts for each labelMajority
+ROIlabel.table_camicro <- table(statsByCaseDF_camicro.E$labelMajority)
+
+# Make the table a dataframe
+ROIlabelDF_camicro <- as.data.frame(ROIlabel.table_camicro)
+
+# Create a column that is the percentage for each labelMajority using the 
+# number of rows for each dataframe
+ROIlabelDF_camicro$Percent <- ((ROIlabelDF_camicro['Freq'])/denominator.camicro * 100)
+ROIlabelDF_camicro$Percent <- as.numeric(unlist(ROIlabelDF_camicro$Percent))
+
+# Merge the Freq and Percent columns into one column
+ROIlabelDF_camicro$Freq <- paste0(
+  ROIlabelDF_camicro$Freq," (",round(ROIlabelDF_camicro$Percent,2) ,"%)")
+
+# Drop the temporary Percent column
+ROIlabelDF_camicro <- ROIlabelDF_camicro[c('Var1', 'Freq')]
+
+# Rename the columns
+names(ROIlabelDF_camicro)[names(ROIlabelDF_camicro) == 'Var1'] <- "Majority Label"
+names(ROIlabelDF_camicro)[names(ROIlabelDF_camicro) == 'Freq'] <- "Crowd - All"
+
+# Reorder the columns based on frequency of all caMicroscope cases
+rowidx_camicro_Frequency <- order(ROIlabelDF_camicro[,'Crowd - All'], decreasing=TRUE)
+ROIlabelDF_camicro <- ROIlabelDF_camicro[rowidx_camicro_Frequency,,]
+
+
+
+# Create table of the counts for each labelMajority
+ROIlabel.table_Crowd <- table(statsByCaseDF_Crowd.E$labelMajority)
+
+# Make the table a dataframe
+ROIlabelDF_Crowd <- as.data.frame(ROIlabel.table_Crowd)
+
+# Create a column that is the percentage for each labelMajority using the 
+# number of rows for each dataframe
+ROIlabelDF_Crowd$Percent <- ((ROIlabelDF_Crowd['Freq'])/denominator.Crowd * 100)
+ROIlabelDF_Crowd$Percent <- as.numeric(unlist(ROIlabelDF_Crowd$Percent))
+
+# Merge the Freq and Percent columns into one column
+ROIlabelDF_Crowd$Freq <- paste0(
+  ROIlabelDF_Crowd$Freq," (",round(ROIlabelDF_Crowd$Percent,2) ,"%)")
+
+# Drop the temporary Percent column
+ROIlabelDF_Crowd <- ROIlabelDF_Crowd[c('Var1', 'Freq')]
+
+# Rename the columns
+names(ROIlabelDF_Crowd)[names(ROIlabelDF_Crowd) == 'Var1'] <- "Majority Label"
+names(ROIlabelDF_Crowd)[names(ROIlabelDF_Crowd) == 'Freq'] <- "Crowd - Select"
+
+
+
+# Merge the dataframes using the order set by ROIlabelDF_camicro
+ROIlabelDF_merged <- merge(
+  x = ROIlabelDF_camicro, 
+  y = ROIlabelDF_Crowd,
+  by = "Majority Label",
+  all = TRUE
+  )
+ROIlabelDF_merged <- merge(
+  x = ROIlabelDF_merged, 
+  y = ROIlabelDF_Expert,
+  by = "Majority Label",
+  all = TRUE
+  )
+
+# Replace "NA" with "0 (0%)"
+ROIlabelDF_merged[is.na(ROIlabelDF_merged)] <- '0 (0%)'
+
+# Remove rownames
+rownames(ROIlabelDF_merged) <- c()
+
+#write.csv(ROIlabelDF_merged,
+#          FILEPATH, 
+#          row.names = TRUE)
+
+
+knitr::kable(ROIlabelDF_merged, caption="ROI Label Frequency", align="l")
+
+```
+
+\newpage
+
+
+```{r Table 6 Pitfall Summary Table, results='asis'}
+
+# Table 6. Summary of pitfalls encountered during the sTIL 
+# assessment grouped by pitfall type.
+
+
+
+
+pitfall_summary <- c("Exclude thick-walled vessels, benign glandular elements, adipocytes, carcinoma in situ, and necrosis from the area of tumor-associated stroma",
+                     "Calculate with respect to the entire ROI area",
+                     "Variations in tumor cell morphology can make it difficult to distinguish stroma from tumor",
+                     "Cells with small/pyknotic and/or perinuclear clearing can be difficult to categorize",
+                     "Non-lymphoid cells may be confused for lymphocytes",
+                     "Error in the percent tumor-associated stroma can affect the sTILs density",
+                     "Sparsely distributed tumor cells may be more challenging to quantitate")
+
+pitfall_type <- c("Percent of Tumor-Associated Stroma",
+                  "Percent of Tumor-Associated Stroma",
+                  "Percent of Tumor-Associated Stroma",
+                  "sTILs Density Score",
+                  "sTILs Density Score",
+                  "sTILs Density Score",
+                  "sTILs Density Score")
+
+pitfall_table <- data.frame(pitfall_type, pitfall_summary)
+names(pitfall_table)[1] <- "Pitfall Type"
+names(pitfall_table)[2] <- "Pitfall Summary"
+
+library(kableExtra)
+
+kbl(pitfall_table, caption="Pitfall Summary Table", booktabs = T) %>%
+  kable_styling(full_width = TRUE) %>%  
+  column_spec(1, width = "15em") %>%
+  collapse_rows(columns=1) %>%
+  row_spec(0, align = "c")
+  
+```
+
+
+
