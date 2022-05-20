@@ -84,6 +84,11 @@ create_statsByCaseDF <- function(mrmcDF, keep_na=FALSE){
 # calculated scoreVar to a score Var that is "NA". This was due to removing a 
 # duplicate entry by reader "unknown1892".
 
+
+# The data at the time this file was uploaded can be found at 
+# inst/extra/20220506-GarciaCancersPaper/pilotHTT_20220506.rda
+
+
 # Specify the filter date.
 filterDate <- "2021-05-05 00:00:00 EST"
 
