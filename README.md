@@ -28,6 +28,10 @@ To install this package from the R command line: install_github('DIDSR/HTT')
 #### Manuscript describing pilot study results:
 Elfer et al. (2022), “Pilot study to evaluate tools to collect pathologist annotations for validating machine learning algorithms,” *J. Med. Imag.*, **9**, p. 047501, https://www.doi.org/10.1117/1.JMI.9.4.047501.
 
+#### Manuscript about Multi-reader Multi-case Analysis of Limits of Agreement
+* Wen and Gallas (2022), “Three-Way Mixed Effect ANOVA to Estimate MRMC Limits of Agreement,” *Stat Biopharm Res*, p. 1–10, https://www.doi.org/10.1080/19466315.2022.2063169.
+
+
 #### Library of work from HTT team
 https://www.zotero.org/groups/4384613/eedap_studies_presentations_publications_and_studies/library
 
