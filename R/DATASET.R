@@ -332,7 +332,7 @@ NULL
 #'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}(https://github.com/DIDSR/HTT/blob/main/README.md).
 #'   for more information about the data.
 #'
-#'   As of 6 May 2022, this data contains 7898 observations of 18 variables.
+#'   As of 6 May 2022, this data contains 7898 observations of 10 variables.
 #'
 #    This data is saved as rda and csv files.
 #'
