@@ -70,7 +70,7 @@
 #'
 #' @details
 #'   This data was collected from the CAmicroscope, PathPresenter, and eeDAP
-#'   platforms. Please refer to [https://github.com/DIDSR/HTT/blob/main/README.md](https://github.com/DIDSR/HTT/blob/main/README.md).
+#'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}(https://github.com/DIDSR/HTT/blob/main/README.md).
 #'   for more information about the data.
 #'
 #'   As of 6 May 2022, this data contains 7898 observations of 18 variables.
@@ -329,7 +329,7 @@ NULL
 #'
 #' @details
 #'   This data was collected from the CAmicroscope, PathPresenter, and eeDAP
-#'   platforms. Please refer to [https://github.com/DIDSR/HTT/blob/main/README.md](https://github.com/DIDSR/HTT/blob/main/README.md).
+#'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}(https://github.com/DIDSR/HTT/blob/main/README.md).
 #'   for more information about the data.
 #'
 #'   As of 6 May 2022, this data contains 7898 observations of 18 variables.
