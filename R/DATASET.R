@@ -19,7 +19,7 @@
 #'     \item{\code{readerID} (factor) - ID for each participant (profession
 #'      with ID number)
 #'     \itemize{
-#'           \item There are four possible professions at the front end of 
+#'           \item There are four possible professions at the front end of
 #'           readerID: pathologist, expert, resident, or unknown.
 #'           \item \code{pathologist} - board-certified pathologist
 #'           \item \code{expert} - member of the Expert Panel
@@ -29,7 +29,10 @@
 #'     \item{\code{modalityID} (factor) - Platform used by viewer (caMicro,
 #'      pathPresenter, eeDAP, or camic-expert)
 #'      \itemize{
-#'           \item \code{camic-expert} - Expert Panel annotations collected
+#'           \item \code{caMicro} - Digital annotations collected
+#'           \item \code{pathPresenter} - Digital annotations collected
+#'           \item \code{eeDAP} - Microscope annotations collected
+#'           \item \code{camic-expert} - Digital Expert Panel annotations collected
 #'            using the caMicroscope platform
 #'           }}
 #'     \item \code{score} (num) - Percent of area occupied by lymphocytes in
@@ -67,7 +70,7 @@
 #'
 #' @details
 #'   This data was collected from the CAmicroscope, PathPresenter, and eeDAP
-#'   platforms. Please refer to https://github.com/DIDSR/HTT/blob/main/README.md 
+#'   platforms. Please refer to [https://github.com/DIDSR/HTT/blob/main/README.md](https://github.com/DIDSR/HTT/blob/main/README.md).
 #'   for more information about the data.
 #'
 #'   As of 6 May 2022, this data contains 7898 observations of 18 variables.
@@ -152,7 +155,7 @@ NULL
 #'  \item \code{cancerType} (chr) - Type of cancer of slides
 #'  \item \code{sampleType} (chr) - Type of tissue sample (biopsy or resection)
 #'  \item \code{glassSlideRecieved} (logical) - If the glass slide of the sample
-#'    is received by the FDA
+#'    was received by the FDA
 #'  \item \code{note} (logical) - Additional notes
 #'  \item \code{received} (chr) - Method by which images were received
 #'  }
@@ -262,5 +265,75 @@ NULL
 #'  Bordet is equipped to image Dapi/Fitc/Tritc/Cy3/Cy5 and equivalent.
 #'
 #'  You can download the NDP.view software for free from the Hamamatsu website.
+#'
+NULL
+
+# pilotHTT_RST ########################################################
+#' @title Simplified annotation data of the pilot study
+#'
+#' @name pilotHTT_RST
+#'
+#' @return
+#'   A data frame with the following (10) variables:
+#'   \itemize{
+#'     \item{\code{batch} (factor) - Batch number of image annotated by the
+#'      reader (10 batches in total)
+#'     \itemize{
+#'           \item \code{FDA-HTT-batch00x} - Pilot Study annotations
+#'           \item \code{FDA-HTT-Train00x} - Expert Panel annotations
+#'           }}
+#'     \item \code{WSI} (factor) - Whole case file name of whole slide image
+#'      annotated by reader
+#'     \item \code{caseID} (factor) - ID for region of interest. Includes WSI,
+#'      x position of ROI, y position of ROI, and length of ROI
+#'     \item{\code{readerID} (factor) - ID for each participant (profession
+#'      with ID number)
+#'     \itemize{
+#'           \item There are four possible professions at the front end of
+#'           readerID: pathologist, expert, resident, or unknown.
+#'           \item \code{pathologist} - board-certified pathologist
+#'           \item \code{expert} - member of the Expert Panel
+#'           \item \code{resident} - in residency
+#'           \item \code{unknown} - no indicated profession
+#'           }}
+#'     \item{\code{modalityID} (factor) - Platform used by viewer (caMicro,
+#'      pathPresenter, eeDAP, or camic-expert)
+#'      \itemize{
+#'           \item \code{caMicro} - Digital annotations collected
+#'           \item \code{pathPresenter} - Digital annotations collected
+#'           \item \code{eeDAP} - Microscope annotations collected
+#'           \item \code{camic-expert} - Digital Expert Panel annotations collected
+#'            using the caMicroscope platform
+#'           }}
+#'     \item \code{labelROI} (factor) - Label of region of interest
+#'      (Intra-Tumoral Stroma, Invasive Margin, Tumor with No Intervening
+#'       Stroma, other regions)
+#'     \item \code{evaluable} (logical) - Indicates whether the region of interest
+#'      is appropriate for sTIL evaluation
+#'     \item \code{densityTILs} (num) - Percent of area occupied by lymphocytes
+#'      in \code{Intra-Tumoral Stroma}.
+#'     \item \code{experience} (num) - Number of years of experience for
+#'      pathologists. If experience == 100, experience is unknown
+#'     \item \code{experienceResident} (num) - Number of years in residency
+#'      for non-pathologists. If experienceResident == 100, experience is unknown
+#' }
+#'
+#'
+#' @description
+#'   This file is the aggregate of all clean data from the High-Throughput
+#'   Truthing project.
+#'   It has been cleaned of PII (names and emails) and other non-essential columns. This is the simplified version of `pilotHTT` meant for the FDA Regulatory Science Tool (RST) Program.
+#'
+#' @usage
+#'   pilotHTT_RST
+#'
+#' @details
+#'   This data was collected from the CAmicroscope, PathPresenter, and eeDAP
+#'   platforms. Please refer to [https://github.com/DIDSR/HTT/blob/main/README.md](https://github.com/DIDSR/HTT/blob/main/README.md).
+#'   for more information about the data.
+#'
+#'   As of 6 May 2022, this data contains 7898 observations of 18 variables.
+#'
+#    This data is saved as rda and csv files.
 #'
 NULL
