@@ -10,7 +10,7 @@
 #'   summary statistics, including the average squared differences of the
 #'   \code{score}s.
 #'
-#' @param mrmcDF (chr) - Data frame for analysis
+#' @param mrmcDF (data.frame) - Data frame for analysis
 #' @param modalityLabel (chr) - Platform used by the readers. Possible
 #'   values:("1: camic", "2: eedap", "3: pathp", "4: all", or "5: all panel")
 #' @param subgroupLabel (chr) - Range of scores analyzed by readers.
@@ -41,7 +41,7 @@
 #'    \item \code{modalityID.Y} (fact) - modality used by reader Y
 #'    \item \code{score.Y} (num) - score by reader Y
 #'  }
-#'  \item \code{resultsBRWM} (data frame) - Data containing the average squared
+#'  \item \code{resultsBRWM} (data.frame) - Data containing the average squared
 #'    difference for all pairs of readers. Data contains the following variables:
 #'  \enumerate{
 #'    \item \code{modalityID} (chr) - modality used used to annotate ROI
