@@ -38,9 +38,11 @@
 #'     \item \code{score} (num) - Percent of area occupied by lymphocytes in
 #'      \code{Intra-Tumoral Stroma}. (Same as \code{densityTILs}).
 #'     \item \code{experience} (num) - Number of years of experience for
-#'      pathologists. If experience == 100, experience is unknown
+#'      pathologists. If experience == 100, experience is unknown.
+#'      If experience == -1, experience is not applicable for the reader.
 #'     \item \code{experienceResident} (num) - Number of years in residency
-#'      for non-pathologists. If experienceResident == 100, experience is unknown
+#'      for non-pathologists. If experienceResident == 100, experience is unknown.
+#'      If experienceResident == -1, experience is not applicable for the reader.
 #'     \item \code{labelROI} (factor) - Label of region of interest
 #'      (Intra-Tumoral Stroma, Invasive Margin, Tumor with No Intervening
 #'       Stroma, other regions)
@@ -313,9 +315,11 @@ NULL
 #'     \item \code{densityTILs} (num) - Percent of area occupied by lymphocytes
 #'      in \code{Intra-Tumoral Stroma}.
 #'     \item \code{experience} (num) - Number of years of experience for
-#'      pathologists. If experience == 100, experience is unknown
+#'      pathologists. If experience == 100, experience is unknown.
+#'      If experience == -1, experience is not applicable for the reader.
 #'     \item \code{experienceResident} (num) - Number of years in residency
-#'      for non-pathologists. If experienceResident == 100, experience is unknown
+#'      for non-pathologists. If experienceResident == 100, experience is unknown.
+#'      If experienceResident == -1, experience is not applicable for the reader.
 #' }
 #'
 #'
