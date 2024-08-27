@@ -276,7 +276,7 @@ NULL
 #' @name pilotHTT_RST
 #'
 #' @return
-#'   A data frame with the following (10) variables:
+#'   A data frame with the following (9) variables:
 #'   \itemize{
 #'     \item{\code{batch} (factor) - Batch number of image annotated by the
 #'      reader (10 batches in total)
@@ -307,9 +307,6 @@ NULL
 #'           \item \code{camic-expert} - Digital Expert Panel annotations collected
 #'            using the caMicroscope platform
 #'           }}
-#'     \item \code{labelROI} (factor) - Label of region of interest
-#'      (Intra-Tumoral Stroma, Invasive Margin, Tumor with No Intervening
-#'       Stroma, other regions)
 #'     \item \code{evaluable} (logical) - Indicates whether the region of interest
 #'      is appropriate for sTIL evaluation
 #'     \item \code{densityTILs} (num) - Percent of area occupied by lymphocytes
@@ -336,7 +333,7 @@ NULL
 #'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}(https://github.com/DIDSR/HTT/blob/main/README.md).
 #'   for more information about the data.
 #'
-#'   As of 6 May 2022, this data contains 7898 observations of 10 variables.
+#'   As of 6 May 2022, this data contains 7898 observations of 9 variables.
 #'
 #    This data is saved as rda and csv files.
 #'
