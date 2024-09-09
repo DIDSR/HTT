@@ -59,6 +59,13 @@
 #'      the data is saved
 #'     \item \code{task} (factor) - Version number of platform
 #'     \item \code{inputFileName} (chr) - File name of the input file
+#'     \item \code{scanYear} (int) - Year when the slide was scanned
+#'     \item \code{WSIoriginal} (chr) - New whole case file name of whole slide
+#'     image annotated by reader
+#'    \item \code{cancerType} (chr) - Type of cancer of slides
+#'    \item \code{sampleType} (chr) - Type of tissue sample (biopsy or resection)
+#'    \item \code{glassSlideReceived} (logical) - If the glass slide of the sample
+#'    was received by the FDA
 #' }
 #'
 #'
@@ -79,122 +86,6 @@
 #'
 #    This data is saved as rda and csv files.
 #'
-NULL
-
-# . #################################################################
-
-# cleanReaders ######################################################
-#' @title Information about the readers in this study
-#'
-#' @name cleanReaders
-#'
-#' @description
-#'   This file contains the information about the readers in this study. It has
-#'    been cleaned of PII (names and emails)
-#'
-#' @return
-#'   A data fame with the following (3) variables:
-#'   \itemize{
-#'    \item \code{readerID} (factor) - ID of participant (profession and ID
-#'     number)
-#'    \item \code{experience} (num) - Number of years of experience for
-#'     pathologists
-#'    \item \code{experienceResident} (num) - Number of years in residency for
-#'     non-pathologists
-#'   }
-#'
-#' @usage
-#'   cleanReaders
-#'
-#' @details
-#'  readerID updated from reader#### to profession### depending on the number
-#'   of years of experience and experienceResident
-#'
-#'  This data is saved as rda and csv files
-NULL
-
-# casesHTT ##########################################################
-#' @title Original image file names and related information for HTT cases
-#'
-#' @name casesHTT
-#'
-#' @description This file contains the original image file names and related information for the HTT cases. The data collected from caMicroscope, eeDAP, and pathPresenter.
-#'
-#' @usage
-#'   casesHTT
-#'
-#' @details
-#'  View the image and scanner information of casesHTT:
-#'  \code{\link{scannerInformationCasesHTT}}.
-#'
-#  \strong{Suggestions from Ashish Sharma: ####}
-#  When downloading large quantities of images from box,
-#  consider using rclone.org. It’s an OSS that allows you to
-#  rsync w/ Box etc. We use it all the time to move stuff from
-#  cloud stores to Linux boxes.
-#
-#  An alternative for storage could be via Google Cloud (not Google Drive).
-#  It’d be easy to try.
-#  \itemize{
-#    \item 1.	Can you create an account on console.cloud.google.com ?
-#    \item 2.	It will ask you for a credit card #'  and issue you $300 in free credits.
-#    \item   a.	Accept it
-#    \item 3.	Send me the email address you used to create this account
-#    \item 4.	I will then add you to a bucket where you can upload the images.
-#    \item   a.	I can then share those w/ Matt.
-#  }
-#'
-#' @return
-#'  The dataframe contains 9 columns:
-#'  \itemize{
-#'  \item \code{batch} (chr) - Batch number of image annotated by the reader
-#'    (8 batches in total)
-#'  \item \code{scanYear} (int) - Year when the slide was scanned
-#'  \item \code{WSIoriginal} (chr) - New whole case file name of whole slide
-#'    image annotated by reader
-#'  \item \code{WSInew} (chr) - Original whole case file name of whole slide
-#'    image annotated by reader
-#'  \item \code{cancerType} (chr) - Type of cancer of slides
-#'  \item \code{sampleType} (chr) - Type of tissue sample (biopsy or resection)
-#'  \item \code{glassSlideRecieved} (logical) - If the glass slide of the sample
-#'    was received by the FDA
-#'  \item \code{note} (logical) - Additional notes
-#'  \item \code{received} (chr) - Method by which images were received
-#'  }
-NULL
-
-# roisHTT ###########################################################
-#' @title Information about the ROIs in this study
-#'
-#' @name roisHTT
-#'
-#' @description
-#'   This file contains the information about the regions of interest (ROIs)
-#'   in this pilot study. The data frame
-#'   includes information about the image file names and the position of
-#'   ROIs within the slides.
-#'
-#' @details
-#'   There are 640 ROIs in the pilot study: 64 images x 10 ROIs per image.
-#'   ROIs were selected before data collection. Please refer to
-#'   \href{https://arxiv.org/abs/2010.06995}{this manuscript}
-#'   for information about ROI selection and to see a few samples.
-#'
-#' @usage
-#'   roisHTT
-#'
-#' @return
-#'  The data frame contains 10 columns:
-#'  \itemize{
-#'  \item \code{task} (chr)- Task Pathologists were asked to complete
-#'  \item \code{batch} (factor) - Batch Number
-#'  \item \code{WSI} (factor) - Slide number
-#'  \item \code{ROI} (factor) - Region of Interest analyzed
-#'  \item \code{left, top, width, height} - All Numeric - Indicate the position
-#'   of the ROI on the slide
-#'  \item \code{widthMicrons and heightMicrons} - Numeric - Indicate the size
-#'   of the ROI in Microns
-#'  }
 NULL
 
 # . #################################################################
