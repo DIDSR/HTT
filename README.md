@@ -13,7 +13,7 @@ To install this package from the R command line: install_github('DIDSR/HTT')
 * [https://github.com/DIDSR/HTT](https://github.com/DIDSR/HTT)
 
 #### Manual documenting the data and functions in the R package:
-* [https://github.com/DIDSR/HTT/tree/main/inst/manual](hhttps://github.com/DIDSR/HTT/blob/main/inst/manual/HTT_2.0.1.pdf)
+* [https://github.com/DIDSR/HTT/tree/main/inst/manual/HTT_2.0.1.pdf](https://github.com/DIDSR/HTT/blob/main/inst/manual/HTT_2.0.1.pdf)
 * [https://github.com/DIDSR/HTT/tree/main/inst/manual/HTTuserManual.pdf](https://github.com/DIDSR/HTT/tree/main/inst/manual/HTTuserManual.pdf)
 
 ---
