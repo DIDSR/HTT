@@ -91,12 +91,12 @@ NULL
 # . #################################################################
 
 # scanner Information CasesHTT ########################################
-#' @title Scanner information of \code{\link{casesHTT}}
+#' @title Scanner information for the cases used in the HTT Pilot Study
 #'
 #' @name scannerInformationCasesHTT
 #'
 #' @description This documentation includes the scanner information of
-#'  \code{\link{casesHTT}}
+#'  the HTT Pilot Study cases
 #'
 #'  \strong{Sample information}
 #'
