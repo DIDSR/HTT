@@ -59,13 +59,6 @@
 #'      the data is saved
 #'     \item \code{task} (factor) - Version number of platform
 #'     \item \code{inputFileName} (chr) - File name of the input file
-#'     \item \code{scanYear} (int) - Year when the slide was scanned
-#'     \item \code{WSIoriginal} (chr) - New whole case file name of whole slide
-#'     image annotated by reader
-#'    \item \code{cancerType} (chr) - Type of cancer of slides
-#'    \item \code{sampleType} (chr) - Type of tissue sample (biopsy or resection)
-#'    \item \code{glassSlideReceived} (logical) - If the glass slide of the sample
-#'    was received by the FDA
 #' }
 #'
 #'
