@@ -5,7 +5,7 @@ Truthing project (HTT project). The "inst" directory
 will be used to archive scripts that reproduce the
 analyses done for different presentations and publications.
 
-Project hub space: https://ncihub.org/groups/eedapstudies
+Project hub space: https://didsr.github.io/HTT.home/ 
 
 To install this package from the R command line: install_github('DIDSR/HTT')
 
@@ -13,9 +13,8 @@ To install this package from the R command line: install_github('DIDSR/HTT')
 * [https://github.com/DIDSR/HTT](https://github.com/DIDSR/HTT)
 
 #### Manual documenting the data and functions in the R package:
-* [https://github.com/DIDSR/HTT/tree/main/inst/manual](https://github.com/DIDSR/HTT/tree/main/inst/manual)
-
-#### Webinar tour of the data: [Link to video](https://ncihub.org/groups/eedapstudies/wiki/Presentation2021:TourofHTTData)
+* [https://github.com/DIDSR/HTT/tree/main/inst/manual/HTT_2.0.1.pdf](https://github.com/DIDSR/HTT/blob/main/inst/manual/HTT_2.0.1.pdf)
+* [https://github.com/DIDSR/HTT/tree/main/inst/manual/RST-HTTpilot_userManual.pdff](https://github.com/DIDSR/HTT/tree/main/inst/manual/RST-HTTpilot_userManual.pdf)
 
 ---
 
