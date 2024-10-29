@@ -1,4 +1,4 @@
-# pilotHTT ########################################################
+# pilotHTT ##########
 #' @title Annotation data
 #'
 #' @name pilotHTT
@@ -72,7 +72,7 @@
 #'
 #' @details
 #'   This data was collected from the CAmicroscope, PathPresenter, and eeDAP
-#'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}(https://github.com/DIDSR/HTT/blob/main/README.md).
+#'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}{https://github.com/DIDSR/HTT/blob/main/README.md}.
 #'   for more information about the data.
 #'
 #'   As of 6 May 2022, this data contains 7898 observations of 18 variables.
@@ -81,9 +81,7 @@
 #'
 NULL
 
-# . #################################################################
-
-# scanner Information CasesHTT ########################################
+# scanner Information CasesHTT ##########
 #' @title Scanner information for the cases used in the HTT Pilot Study
 #'
 #' @name scannerInformationCasesHTT
@@ -154,7 +152,7 @@ NULL
 #'
 NULL
 
-# pilotHTT_RST ########################################################
+# pilotHTT_RST ##########
 #' @title Simplified annotation data of the pilot study
 #'
 #' @name pilotHTT_RST
@@ -214,11 +212,50 @@ NULL
 #'
 #' @details
 #'   This data was collected from the CAmicroscope, PathPresenter, and eeDAP
-#'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}(https://github.com/DIDSR/HTT/blob/main/README.md).
+#'   platforms. Please refer to \href{https://github.com/DIDSR/HTT/blob/main/README.md}{https://github.com/DIDSR/HTT/blob/main/README.md}.
 #'   for more information about the data.
 #'
 #'   As of 6 May 2022, this data contains 7898 observations of 9 variables.
 #'
 #    This data is saved as rda and csv files.
+#'
+NULL
+
+# pilotImagesHTT ##########
+#' @title Data frame of names of pilot study images available for download
+#'
+#' @name pilotImagesHTT
+#'
+#' @return
+#'   A data frame with the following (4) variables:
+#'   \itemize{
+#'       \item{\code{collection.name} name of the collection:
+#'           "Download-HTTpilotImages"}
+#'       \item{\code{collection.description} description of the collection:
+#'           "Download HTT pilot images."}
+#'       \item{\code{slide.filename} filename of the slide}
+#'       \item{\code{slide.name} name of the slide to appear to user}
+#'   }
+#'
+#'
+#' @description
+#'   This data frame is used to define the collection of pilot study images that
+#'   are available for download. The data frame is available as an exported
+#'   data object and as a human-readable csv file (folder extdata). The files
+#'   are available for download from
+#'   \href{https://wolf.cci.emory.edu/camic/htt/}{https://wolf.cci.emory.edu/camic/htt/}.
+#'
+#' @usage
+#'   pilotImagesHTT
+#'
+#' @seealso \link{scannerInformationCasesHTT}
+#'
+#'
+#' @examples
+#' # Open and view the data object
+#' pilotImagesHTT <- HTT::pilotImagesHTT
+#' View(pilotImagesHTT)
+#'
+#'
 #'
 NULL
