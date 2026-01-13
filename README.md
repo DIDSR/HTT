@@ -34,6 +34,11 @@ Elfer et al. (2022), “Pilot study to evaluate tools to collect pathologist ann
 #### Library of work from HTT team
 https://www.zotero.org/groups/4384613/eedap_studies_presentations_publications_and_studies/library
 
+
+## Disclaimer
+This article reflects the views of the authors and does not represent the views or policy of the U.S. Food and Drug Administration, the Department of Health and Human Services, or the U.S. Government. The mention of commercial products, their sources, or their use in connection with material reported herein is not to be construed as either an actual or implied endorsement of such products by the Department of Health and Human Services.
+
+
 [comment]: <> "[![Github All Releases](https://img.shields.io/github/downloads/DIDSR/HTT/total)]()"
 
 
